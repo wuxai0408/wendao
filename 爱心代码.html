@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>爱心代码</title>
+    <meta charset="UTF-8">
+    <meta name="Keywords" content="爱心代码，程序员表白">
+    <meta name="Description" content="爱心代码，HTML文件，何书悦GitHub爱心代码项目">
+    <link rel="shortcut icon" href="../picture/爱心.png" type="image/x-icon">
+    <!-- https://github.com/he-weilai/love-code -->
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        body {
+            background-color: pink;
+        }
+        #frame {
+            position: relative;
+            width: 400px;
+            height: 300px;
+            margin: 250px auto;
+        }
+        .left,
+        .right {
+            position: absolute;
+            top: 0;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+        }
+        .left {
+            left: 35px;
+        }
+        .right {
+            right: 35px;
+            z-index: -1;
+        }
+        .bottom {
+            position: absolute;
+            bottom: 36px;
+            left: 100px;
+            width: 200px;
+            height: 200px;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+        .heart {
+            position: absolute;
+            box-shadow: 0 0 40px #d5093c;
+            animation: beat .4s ease infinite normal;
+            background: linear-gradient(-90deg, #F50A45 0%, #d5093c 40%);
+        }
+        @keyframes beat {
+            0% {
+                transform: scale(1) rotate(225deg);
+                box-shadow: 0 0 40px #d5093c;
+            }
+            50% {
+                transform: scale(1.1) rotate(225deg);
+                box-shadow: 0 0 70px #d5093c;
+            }
+            100% {
+                transform: scale(1) rotate(225deg);
+                box-shadow: 0 0 40px #d5093c;
+            }
+        }
+        .word {
+            position: absolute;
+            width: 50%;
+            top: 75%;
+            left: 25%;
+            text-align: center;
+            transform: translateY(-50%);
+            font-family: 'Love Ya Like A Sister', cursive;
+            font-size: 40px;
+            color: #c70012;
+            padding: 0 20px;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -2;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="c"></canvas>
+    <div id="frame">
+        <div class="heart left"></div>
+        <div class="heart right"></div>
+        <div class="heart bottom"></div>
+    </div>
+    <b class="word">我喜欢你！</b>
+    <script>
+        var b = document.body;
+        var c = document.getElementById('c');
+        var a = c.getContext('2d');
+        c.width = window.innerWidth;
+        c.height = window.innerHeight;
+        var m = [];
+        var f = c.width;
+        var h = c.height;
+        var C = Math.cos;
+        var S = Math.sin;
+        var P = Math.pow;
+        var R = Math.random;
+        function p(a, b, c) {
+            if (c > 60) return null;
+            var o = P(a, 3) + P(a, 2) - a;
+            var w = P(a, 3) + P(a, 2) - a;
+            var B = o * S(c) + w * C(c) + 500;
+            return [o * C(c) - w * S(c), B, o * S(c) + w * C(c) + 500, (1 - b / 1.2) * .9 + a * .1, P((1 - b), 20) / 4 + .05];
+        }
+        setInterval(function () {
+            for (var i = 0; i < 10000; i++) {
+                if (s = p(R(), R(), i % 46 / .74)) {
+                    var z = s[2];
+                    var x = ~~(s[0] * f / z - h);
+                    var y = ~~(s[1] * f / z - h);
+                    var q = y * f + x;
+                    if (!m[q] || m[q] > z) {
+                        m[q] = z;
+                        a.fillStyle = "rgb(" + ~(s[3] * h) + "," + ~(s[4] * h) + "," + ~(s[3] * s[3] * -80) + ")";
+                        a.fillRect(x, y, 1, 1);
+                    }
+                }
+            }
+        }, 0);
+    </script>
+</body>
+</html>
