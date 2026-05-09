@@ -966,7 +966,7 @@ function showGame(title) {
   document.getElementById('game-title').textContent = title;
   // 显示自动推进开关（快捷键和连连看模式除外）
   const toggleWrap = document.getElementById('toggle-wrap');
-  if (['shortcut', 'match'].includes(state.game)) {
+  if (['match'].includes(state.game)) {
     toggleWrap.style.display = 'none';
   } else {
     toggleWrap.style.display = '';
@@ -1079,6 +1079,7 @@ function globalKeyHandler(e) {
     e.preventDefault();
     if (state.game === 'quiz') manualNextQuiz();
     else if (state.game === 'scenario') nextScenario();
+    else if (state.game === 'shortcut') manualNextShortcut();
   }
 }
 
@@ -1164,19 +1165,17 @@ function checkShortcutAnswer(input) {
   state.totalCount++;
 
   const expected = state.shortcutCurrent.answer;
-  // 标准化比较
-  const normalize = s => s.replace(/\s/g, '').toLowerCase().replace('arrowup','↑').replace('arrowdown','↓').replace('arrowleft','←').replace('arrowright','→').replace('pageup','PageUp').replace('pagedown','PageDown').replace('方向键','方向键');
   const userNorm = input.replace(/\s/g, '').toLowerCase();
 
-  // 对于"方向键"这种模糊的答案，做特殊处理
   let expectedNorm = expected.replace(/\s/g, '').toLowerCase();
-  // 检查Ctrl+Shift+> 和 Ctrl+Shift+< 的特殊情况
   if (expected === 'Ctrl+Shift+>') expectedNorm = 'ctrl+shift+.';
   if (expected === 'Ctrl+Shift+<') expectedNorm = 'ctrl+shift+,';
 
   const correct = userNorm === expectedNorm || userNorm === expected.replace(/\s/g, '').toLowerCase();
 
   const display = document.getElementById('shortcut-display');
+  const fb = document.getElementById('shortcut-feedback');
+
   if (correct) {
     state.correctCount++;
     state.score += 10 + state.combo * 3;
@@ -1185,40 +1184,61 @@ function checkShortcutAnswer(input) {
     display.style.color = 'var(--success)';
     display.textContent = '✓ ' + input;
     showPopup('✅ 正确！');
+    if (fb) fb.innerHTML = '';
+    updateStatsUI();
+    if (state.advanceTimer) clearTimeout(state.advanceTimer);
+    state.advanceTimer = setTimeout(nextShortcut, 1200);
   } else {
     resetStreak();
+    updateStatsUI();
     display.style.borderColor = 'var(--danger)';
     display.style.color = 'var(--danger)';
     display.textContent = '✗ ' + input;
-    showAnswer('正确答案：' + expected);
+    if (fb) fb.innerHTML =
+      '<div style="margin-top:8px;padding:10px 14px;background:rgba(255,118,117,0.1);border-radius:8px;border-left:3px solid var(--danger);text-align:center;">'
+      + '<strong>你按的「' + input + '」不是「' + state.shortcutCurrent.prompt + '」的快捷键</strong><br>'
+      + '<span style="font-size:0.95em;">正确答案是 <b style="color:var(--primary-glow);font-size:1.1em;">' + expected + '</b></span><br>'
+      + (state.autoAdvance ? '<span style="font-size:0.8em;color:var(--text-dim);">⏳ 5秒后自动进入下一题</span>'
+        : '<span style="font-size:0.8em;color:var(--text-dim);">💡 按 <b>Enter</b> 进入下一题</span>')
+      + '</div>';
+    if (state.autoAdvance) {
+      if (state.advanceTimer) clearTimeout(state.advanceTimer);
+      state.advanceTimer = setTimeout(nextShortcut, 5000);
+    }
   }
+}
 
-  setTimeout(() => {
+function manualNextShortcut() {
+  if (state.game !== 'shortcut' || !state.answered) return;
+  if (state.advanceTimer) { clearTimeout(state.advanceTimer); state.advanceTimer = null; }
+  nextShortcut();
+}
+
+function nextShortcut() {
+  if (state.game !== 'shortcut') return;
+  state.advanceTimer = null;
+  const display = document.getElementById('shortcut-display');
+  const fb = document.getElementById('shortcut-feedback');
+  if (fb) fb.innerHTML = '';
+  if (display) {
     display.style.borderColor = '';
     display.style.color = '';
     display.textContent = '按下快捷键...';
-    if (state.questionIdx < state.questions.length - 1) {
-      state.questionIdx++;
-      state.answered = false;
-      state.shortcutCurrent = state.questions[state.questionIdx];
-      renderShortcutQuestion();
-    } else {
-      state.questions = shuffle([...SHORTCUT_BANK]);
-      state.questionIdx = 0;
-      state.answered = false;
-      state.shortcutCurrent = state.questions[0];
-      renderShortcutQuestion();
-    }
-  }, 900);
+  }
+  if (state.questionIdx < state.questions.length - 1) {
+    state.questionIdx++;
+    state.answered = false;
+    state.shortcutCurrent = state.questions[state.questionIdx];
+    renderShortcutQuestion();
+  } else {
+    state.questions = shuffle([...SHORTCUT_BANK]);
+    state.questionIdx = 0;
+    state.answered = false;
+    state.shortcutCurrent = state.questions[0];
+    renderShortcutQuestion();
+  }
 }
 
-function showAnswer(text) {
-  const el = document.createElement('div');
-  el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--card);color:var(--danger);padding:10px 24px;border-radius:20px;font-size:0.95em;z-index:100;border:1px solid var(--danger);';
-  el.textContent = text;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1500);
-}
 
 function renderShortcutGame() {
   state.shortcutCurrent = state.questions[state.questionIdx];
@@ -1237,10 +1257,12 @@ function renderShortcutGame() {
       <div id="shortcut-display" class="listening">按下快捷键...</div>
       <button id="reset-shortcut" onclick="resetShortcutInput()">重输</button>
     </div>
+    <div id="shortcut-feedback"></div>
     <div style="text-align:center;color:var(--text-dim);font-size:0.8em;margin-top:8px;">
       进度：${state.questionIdx + 1} / ${state.questions.length}
     </div>
   `;
+  document.addEventListener('keydown', globalKeyHandler);
 }
 
 function resetShortcutInput() {
