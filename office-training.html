@@ -134,6 +134,16 @@
   }
   .toggle-btn:hover { opacity: 0.85; }
 
+  /* Mobile-friendly */
+  @media (max-width: 600px) {
+    .option-btn { padding: 16px 14px; font-size: 1em; }
+    .btn { padding: 14px 30px; font-size: 1.05em; }
+    .menu-card { padding: 20px 16px; }
+    .menu-card .card-emoji { font-size: 2em; }
+    .question-card .q-prompt { font-size: 1.1em; }
+    #shortcut-mobile-input { font-size: 1em; padding: 12px; }
+  }
+
   .question-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -848,6 +858,7 @@ let state = {
   // 通用设置
   autoAdvance: true,
   advanceTimer: null,
+  shortcutMobileMode: false,  // 快捷键模式：false=桌面键盘 true=手机输入法
 };
 
 // ==================== 数据持久化 ====================
@@ -1199,7 +1210,7 @@ function checkShortcutAnswer(input) {
       + '<strong>你按的「' + input + '」不是「' + state.shortcutCurrent.prompt + '」的快捷键</strong><br>'
       + '<span style="font-size:0.95em;">正确答案是 <b style="color:var(--primary-glow);font-size:1.1em;">' + expected + '</b></span><br>'
       + (state.autoAdvance ? '<span style="font-size:0.8em;color:var(--text-dim);">⏳ 5秒后自动进入下一题</span>'
-        : '<span style="font-size:0.8em;color:var(--text-dim);">💡 按 <b>Enter</b> 进入下一题</span>')
+        : '<span style="font-size:0.8em;color:var(--text-dim);">💡 点击按钮进入下一题</span><br><button class="btn" onclick="manualNextShortcut()" style="padding:8px 28px;margin-top:8px;font-size:0.95em;">👉 下一题</button>')
       + '</div>';
     if (state.autoAdvance) {
       if (state.advanceTimer) clearTimeout(state.advanceTimer);
@@ -1242,27 +1253,50 @@ function nextShortcut() {
 
 function renderShortcutGame() {
   state.shortcutCurrent = state.questions[state.questionIdx];
-  state.listening = true;
+  state.listening = !state.shortcutMobileMode;
   state.answered = false;
-  document.addEventListener('keydown', shortcutKeyHandler);
-  document.addEventListener('keyup', shortcutKeyUpHandler);
+  if (!state.shortcutMobileMode) {
+    document.addEventListener('keydown', shortcutKeyHandler);
+    document.addEventListener('keyup', shortcutKeyUpHandler);
+  }
   const content = document.getElementById('game-content');
+  const mobile = state.shortcutMobileMode;
   content.innerHTML = `
+    <div style="text-align:right;margin-bottom:8px;">
+      <button class="toggle-btn" onclick="toggleShortcutMode()"
+        style="font-size:0.75em;padding:5px 14px;background:${mobile?'var(--warning)':'var(--primary)'};">
+        ${mobile ? '📱 手机模式' : '🖥️ 桌面模式'}
+      </button>
+    </div>
     <div class="question-card">
       <span class="q-category">${state.shortcutCurrent.cat}</span>
       <div class="q-prompt">请按下 <strong>"${state.shortcutCurrent.prompt}"</strong> 的快捷键</div>
-      <div class="q-hint">在键盘上直接按下对应的组合键</div>
+      <div class="q-hint">${mobile ? '在输入框中输入快捷键（如 Ctrl+S）' : '在键盘上直接按下对应的组合键'}</div>
     </div>
+    ${mobile ? `
+    <div id="shortcut-input-area" style="display:flex;gap:10px;align-items:center;">
+      <input id="shortcut-mobile-input" type="text" placeholder="输入快捷键，如 Ctrl+S"
+        style="flex:1;background:#0a0a18;color:var(--primary-glow);border:2px solid var(--primary);padding:14px 16px;border-radius:var(--radius);font-size:1.1em;font-family:Consolas,monospace;text-align:center;"
+        onkeydown="if(event.key==='Enter')submitMobileShortcut()" autocomplete="off">
+      <button class="btn" onclick="submitMobileShortcut()" style="padding:14px 22px;">提交</button>
+    </div>` : `
     <div id="shortcut-input-area">
       <div id="shortcut-display" class="listening">按下快捷键...</div>
       <button id="reset-shortcut" onclick="resetShortcutInput()">重输</button>
-    </div>
+    </div>`}
     <div id="shortcut-feedback"></div>
+    ${!mobile ? '' : '<div id="shortcut-feedback"></div>'}
     <div style="text-align:center;color:var(--text-dim);font-size:0.8em;margin-top:8px;">
       进度：${state.questionIdx + 1} / ${state.questions.length}
     </div>
   `;
   document.addEventListener('keydown', globalKeyHandler);
+  if (mobile) {
+    setTimeout(() => {
+      const inp = document.getElementById('shortcut-mobile-input');
+      if (inp) inp.focus();
+    }, 300);
+  }
 }
 
 function resetShortcutInput() {
@@ -1272,14 +1306,40 @@ function resetShortcutInput() {
   if (display) display.textContent = '按下快捷键...';
 }
 
+function toggleShortcutMode() {
+  state.shortcutMobileMode = !state.shortcutMobileMode;
+  document.removeEventListener('keydown', shortcutKeyHandler);
+  document.removeEventListener('keyup', shortcutKeyUpHandler);
+  document.removeEventListener('keydown', globalKeyHandler);
+  if (state.advanceTimer) { clearTimeout(state.advanceTimer); state.advanceTimer = null; }
+  renderShortcutGame();
+}
+
+function submitMobileShortcut() {
+  if (state.answered || state.game !== 'shortcut') return;
+  const inp = document.getElementById('shortcut-mobile-input');
+  if (!inp || !inp.value.trim()) return;
+  const input = inp.value.trim();
+  inp.value = '';
+  checkShortcutAnswer(input);
+}
+
 function renderShortcutQuestion() {
   const card = document.querySelector('.question-card');
   if (!card) return;
   card.querySelector('.q-category').textContent = state.shortcutCurrent.cat;
   card.querySelector('.q-prompt').innerHTML = '请按下 <strong>"' + state.shortcutCurrent.prompt + '"</strong> 的快捷键';
+  const hint = card.querySelector('.q-hint');
+  if (hint) hint.textContent = state.shortcutMobileMode ? '在输入框中输入快捷键（如 Ctrl+S）' : '在键盘上直接按下对应的组合键';
   const progress = document.querySelector('#game-content > div:last-child');
   if (progress) progress.innerHTML = '进度：' + (state.questionIdx + 1) + ' / ' + state.questions.length;
   updateStatsUI();
+  if (state.shortcutMobileMode) {
+    setTimeout(() => {
+      const inp = document.getElementById('shortcut-mobile-input');
+      if (inp) inp.focus();
+    }, 200);
+  }
 }
 
 // ==================== 技能闯关 ====================
@@ -1338,7 +1398,9 @@ function answerQuiz(choice) {
     const fb = document.getElementById('quiz-feedback');
     if (fb) {
       fb.innerHTML = '<div style="text-align:center;color:var(--danger);margin-top:6px;font-size:0.85em;">'
-        + (state.autoAdvance ? '⏳ 5秒后自动进入下一题' : '💡 按 <b>Enter</b> 或点击按钮进入下一题') + '</div>';
+        + (state.autoAdvance ? '⏳ 5秒后自动进入下一题' : '💡 按 <b>Enter</b> 或点击下方按钮进入下一题')
+        + (!state.autoAdvance ? '<br><button class="btn" onclick="manualNextQuiz()" style="padding:8px 28px;margin-top:8px;font-size:0.95em;">👉 下一题</button>' : '')
+        + '</div>';
     }
     if (state.autoAdvance) {
       if (state.advanceTimer) clearTimeout(state.advanceTimer);
