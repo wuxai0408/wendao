@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WPS 技能修炼场 — Office 办公技能训练</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --primary: #6c5ce7;
+    --primary-glow: #a29bfe;
+    --success: #00b894;
+    --danger: #ff7675;
+    --warning: #fdcb6e;
+    --text: #dfe6e9;
+    --text-dim: #636e72;
+    --border: #2d2d4a;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    background-image: radial-gradient(ellipse at 50% 0%, #1a1a3e 0%, var(--bg) 70%);
+  }
+  #app {
+    width: 100%;
+    max-width: 780px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 10px 0 40px;
+  }
+
+  /* Header & Stats */
+  #header {
+    text-align: center;
+  }
+  #header h1 {
+    font-size: 2em;
+    background: linear-gradient(135deg, var(--primary-glow), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  #header .subtitle {
+    color: var(--text-dim);
+    font-size: 0.9em;
+    margin-bottom: 16px;
+  }
+  #stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    padding: 10px 18px;
+    border-radius: 40px;
+    border: 1px solid var(--border);
+    font-size: 0.9em;
+  }
+  .stat-icon { font-size: 1.2em; }
+  .stat-val { font-weight: bold; color: var(--primary-glow); }
+  .xp-bar-wrap {
+    flex-basis: 100%;
+    max-width: 300px;
+    height: 8px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-glow));
+    border-radius: 10px;
+    transition: width 0.5s ease;
+  }
+
+  /* Menu Cards */
+  #menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .menu-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .menu-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: 0 8px 30px rgba(108,92,231,0.2);
+  }
+  .menu-card .card-emoji { font-size: 2.4em; margin-bottom: 10px; display: block; }
+  .menu-card h3 { font-size: 1.15em; margin-bottom: 6px; }
+  .menu-card p { font-size: 0.82em; color: var(--text-dim); line-height: 1.5; }
+  .menu-card .badge {
+    position: absolute; top: 14px; right: 14px;
+    background: var(--primary); color: #fff; font-size: 0.7em;
+    padding: 3px 10px; border-radius: 20px; font-weight: bold;
+  }
+
+  /* Game Area */
+  #game-area { display: none; }
+  #game-area.active { display: block; }
+  #game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  #game-header h2 { font-size: 1.3em; }
+  #back-btn {
+    background: var(--card); color: var(--text); border: 1px solid var(--border);
+    padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.85em;
+  }
+  #back-btn:hover { border-color: var(--primary); }
+
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  .question-card .q-prompt {
+    font-size: 1.3em;
+    margin-bottom: 6px;
+  }
+  .question-card .q-hint {
+    font-size: 0.8em;
+    color: var(--text-dim);
+  }
+  .question-card .q-category {
+    display: inline-block;
+    background: var(--border);
+    padding: 4px 12px;
+    border-radius: 14px;
+    font-size: 0.75em;
+    margin-bottom: 8px;
+  }
+
+  /* Shortcut Input */
+  #shortcut-input-area {
+    display: flex; gap: 12px; justify-content: center; align-items: center;
+    margin: 20px 0;
+  }
+  #shortcut-display {
+    font-size: 1.8em; font-family: "Consolas", "Courier New", monospace;
+    background: #0a0a18; color: var(--primary-glow);
+    padding: 14px 30px; border-radius: var(--radius);
+    border: 2px dashed var(--border); min-width: 180px; text-align: center;
+    letter-spacing: 2px; min-height: 64px; display: flex;
+    align-items: center; justify-content: center;
+    transition: border-color 0.3s;
+  }
+  #shortcut-display.listening { border-color: var(--primary); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  #reset-shortcut {
+    background: none; border: 1px solid var(--border); color: var(--text-dim);
+    padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8em;
+  }
+
+  .options-grid { display: grid; gap: 10px; }
+  .option-btn {
+    display: block; width: 100%; text-align: left;
+    background: var(--card); border: 2px solid var(--border); color: var(--text);
+    padding: 14px 18px; border-radius: var(--radius); font-size: 1em;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--primary); background: #1e1e3e; }
+  .option-btn.correct { border-color: var(--success) !important; background: rgba(0,184,148,0.15) !important; }
+  .option-btn.wrong { border-color: var(--danger) !important; background: rgba(255,118,117,0.15) !important; }
+  .option-btn:disabled { cursor: default; }
+
+  /* Match Game */
+  .match-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 600px) { .match-grid { grid-template-columns: repeat(2, 1fr); } }
+  .match-card {
+    aspect-ratio: 1;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 10px; font-size: 0.82em;
+    transition: all 0.2s;
+    user-select: none;
+    min-height: 80px;
+  }
+  .match-card:hover:not(.matched):not(.selected) { border-color: var(--text-dim); }
+  .match-card.selected { border-color: var(--primary); background: #1e1e3e; transform: scale(1.03); }
+  .match-card.matched { border-color: var(--success); background: rgba(0,184,148,0.12); opacity: 0.7; cursor: default; }
+  .match-card.wrong-flash { border-color: var(--danger) !important; animation: shake 0.4s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  /* Speed mode */
+  .timer-bar-wrap {
+    height: 6px; background: var(--border); border-radius: 6px; margin-bottom: 18px; overflow: hidden;
+  }
+  .timer-bar {
+    height: 100%; background: var(--success); border-radius: 6px; transition: width 1s linear;
+  }
+  .timer-bar.warning { background: var(--warning); }
+  .timer-bar.danger { background: var(--danger); }
+
+  .combo-popup {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-size: 2.5em; font-weight: bold; color: var(--warning);
+    pointer-events: none; animation: popUp 0.8s ease-out forwards; z-index: 100;
+  }
+  @keyframes popUp { 0%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-100%) scale(1.3)} }
+
+  /* Result */
+  #result-screen { display: none; text-align: center; }
+  #result-screen.active { display: block; }
+  #result-screen .score-big { font-size: 4em; font-weight: bold; color: var(--primary-glow); }
+  #result-screen .result-detail { color: var(--text-dim); margin: 12px 0; font-size: 0.95em; }
+  .btn {
+    display: inline-block;
+    background: var(--primary); color: #fff; border: none;
+    padding: 12px 30px; border-radius: 24px; font-size: 1em;
+    cursor: pointer; margin: 6px; font-weight: bold;
+    transition: all 0.2s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108,92,231,0.35); }
+  .btn.ghost {
+    background: none; border: 2px solid var(--primary); color: var(--primary);
+  }
+
+  /* Achievements */
+  #achievements {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 10px;
+  }
+  .achievement {
+    font-size: 0.75em; background: var(--card); border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px;
+  }
+  .achievement.locked { opacity: 0.35; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>WPS 技能修炼场</h1>
+    <p class="subtitle">用游戏的方式，练就办公绝活</p>
+    <div id="stats-bar">
+      <div class="stat-item"><span class="stat-icon">⭐</span> Lv.<span class="stat-val" id="level">1</span></div>
+      <div class="stat-item"><span class="stat-icon">✨</span> <span class="stat-val" id="xp">0</span> XP</div>
+      <div class="stat-item"><span class="stat-icon">🔥</span> 连击 <span class="stat-val" id="streak">0</span></div>
+      <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
+    </div>
+    <div id="achievements"></div>
+  </div>
+
+  <!-- 主菜单 -->
+  <div id="menu">
+    <div class="menu-card" onclick="startGame('shortcut')">
+      <span class="card-emoji">⌨️</span>
+      <span class="badge">热门</span>
+      <h3>快捷键对战</h3>
+      <p>看到操作描述，在键盘上敲出对应的快捷键组合</p>
+    </div>
+    <div class="menu-card" onclick="startGame('quiz')">
+      <span class="card-emoji">📝</span>
+      <h3>技能闯关</h3>
+      <p>Excel · Word · PPT 综合知识选择题，逐步晋级</p>
+    </div>
+    <div class="menu-card" onclick="startGame('speed')">
+      <span class="card-emoji">⚡</span>
+      <span class="badge">刺激</span>
+      <h3>限时冲刺</h3>
+      <p>60秒倒计时，比谁答得又快又准，连击加分！</p>
+    </div>
+    <div class="menu-card" onclick="startGame('match')">
+      <span class="card-emoji">🧩</span>
+      <h3>函数连连看</h3>
+      <p>将函数名与功能描述配对，翻牌记忆大挑战</p>
+    </div>
+  </div>
+
+  <!-- 游戏区域 -->
+  <div id="game-area">
+    <div id="game-header">
+      <h2 id="game-title"></h2>
+      <button id="back-btn" onclick="goMenu()">← 返回菜单</button>
+    </div>
+    <div id="game-content"></div>
+  </div>
+
+  <!-- 结算界面 -->
+  <div id="result-screen">
+    <div class="score-big" id="result-score"></div>
+    <div class="result-detail" id="result-detail"></div>
+    <div id="result-xp"></div>
+    <button class="btn" onclick="restartGame()">再来一局</button>
+    <button class="btn ghost" onclick="goMenu()">返回菜单</button>
+  </div>
+</div>
+
+<script>
+// ==================== 题库 ====================
+const QUIZ_BANK = [
+  // ---------- Excel 函数 ----------
+  { cat:"Excel函数", type:"quiz", q:"VLOOKUP 函数的第四个参数 FALSE 表示什么？", opts:["精确匹配","模糊匹配","反向查找","不区分大小写"], ans:0 },
+  { cat:"Excel函数", type:"quiz", q:"SUMIF 和 SUMIFS 的主要区别是什么？", opts:["无区别","SUMIF 单条件，SUMIFS 多条件","SUMIF 多条件，SUMIFS 单条件","SUMIF 只能对文本求和"], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"=COUNTIF(A1:A10,\">60\") 统计的是什么？", opts:["A1:A10 的和","A1:A10 的平均值","A1:A10 中大于60的单元格个数","A1:A10 中等于60的单元格个数"], ans:2 },
+  { cat:"Excel函数", type:"quiz", q:"=MID(\"WPS办公\", 2, 2) 返回什么？", opts:["\"WPS\"","\"PS\"","\"办公\"","\"S办\""], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"TEXT 函数的主要作用是什么？", opts:["查找文本位置","将数值转为指定格式的文本","合并多个文本","计算文本长度"], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"TRIM 函数的作用是？", opts:["截取文本","删除文本中多余空格","删除文本首尾空格","替换文本"], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"IF 函数的三个参数依次是什么？", opts:["条件,假值,真值","真值,条件,假值","条件,真值,假值","假值,条件,真值"], ans:2 },
+  { cat:"Excel函数", type:"quiz", q:"INDEX+MATCH 相比 VLOOKUP 最大的优势？", opts:["速度更快","可以向左查找，不受列位置限制","语法更简单","不需要排序"], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"COUNTA 和 COUNT 的区别？", opts:["无区别","COUNTA 统计非空，COUNT 只统计数字","COUNT 统计非空，COUNTA 只统计数字","COUNTA 只统计文本"], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"=$A$1 中的 $ 符号表示什么？", opts:["货币格式","绝对引用，拖动公式时不会变化","相对引用","这是一个错误值"], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"=SUMIFS(D:D, A:A, \"产品A\", B:B, \">100\") 中，哪个是求和区域？", opts:["A:A","B:B","D:D","无法确定"], ans:2 },
+  { cat:"Excel函数", type:"quiz", q:"SUBSTITUTE 和 REPLACE 的区别？", opts:["无区别","SUBSTITUTE替换指定文本，REPLACE替换指定位置","REPLACE替换指定文本，SUBSTITUTE替换指定位置","两者只能用于数字"], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"=MAX(10,20,30) 和 =LARGE(A1:A10,1) 的关系是？", opts:["完全不同","LARGE(...,1) 等价于 MAX(...)","MAX 更强大","LARGE 只能用于排序"], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"=RANK(A1, A1:A10) 默认是什么排序？", opts:["升序","降序","随机","按字母"], ans:1 },
+  { cat:"Excel函数", type:"quiz", q:"Ctrl+`（反引号）在 Excel 中的作用？", opts:["切换显示公式/计算结果","打开VBA编辑器","隐藏当前列","切换工作表"], ans:0 },
+
+  // ---------- 操作知识 ----------
+  { cat:"操作知识", type:"quiz", q:"数据透视表的主要作用是？", opts:["美化表格","快速汇总和分析大量数据","制作图表","打印报表"], ans:1 },
+  { cat:"操作知识", type:"quiz", q:"'冻结窗格'在哪个选项卡下？", opts:["开始","插入","页面布局","视图"], ans:3 },
+  { cat:"操作知识", type:"quiz", q:"要删除表格中的重复数据，应该去哪里操作？", opts:["开始 → 删除","数据 → 删除重复项","公式 → 去重","视图 → 清理"], ans:1 },
+  { cat:"操作知识", type:"quiz", q:"'分列'功能可以做以下哪项？", opts:["拆分工作表","按分隔符将一列拆成多列","隐藏列","合并多列"], ans:1 },
+  { cat:"操作知识", type:"quiz", q:"在 WPS 文字中，自动目录生成的前提是什么？", opts:["文档超过10页","先给标题设置标题样式","插入页码","开启修订模式"], ans:1 },
+  { cat:"操作知识", type:"quiz", q:"邮件合并的正确步骤顺序？", opts:["合并→选收件人→插入域","选收件人→插入合并域→完成合并","插入域→选收件人→打印","直接点合并"], ans:1 },
+  { cat:"操作知识", type:"quiz", q:"在 WPS 演示中，幻灯片母版在哪里？", opts:["开始 → 版式","插入 → 模板","视图 → 幻灯片母版","设计 → 背景"], ans:2 },
+  { cat:"操作知识", type:"quiz", q:"'数据验证'（数据有效性）的作用是？", opts:["检查公式错误","限制单元格可输入的内容类型","验证数据是否损坏","加密数据"], ans:1 },
+  { cat:"操作知识", type:"quiz", q:"如何快速给一片区域加上自动筛选？", opts:["Ctrl+Shift+L","Alt+F","Ctrl+F","F5"], ans:0 },
+  { cat:"操作知识", type:"quiz", q:"'格式刷'可以复制什么？", opts:["只复制文字","只复制颜色","复制单元格的格式","复制公式结果"], ans:2 },
+  { cat:"操作知识", type:"quiz", q:"页眉页脚中，奇偶页不同在哪里设置？", opts:["打印设置","页眉页脚选项中勾选'奇偶页不同'","页面背景","段落设置"], ans:1 },
+  { cat:"操作知识", type:"quiz", q:"WPS 表格中 Ctrl+T 的作用是？", opts:["新建工作表","创建表格（套用表格格式）","粘贴文本","打开选项"], ans:1 },
+  { cat:"操作知识", type:"quiz", q:"'阅读模式'（聚光灯）的作用？", opts:["自动朗读单元格","高亮当前单元格所在的行和列","切换夜间模式","放大字体"], ans:1 },
+
+  // ---------- 快捷键 ----------
+  { cat:"快捷键", type:"quiz", q:"撤销上一步操作的快捷键是？", opts:["Ctrl+X","Ctrl+Z","Ctrl+Y","Ctrl+U"], ans:1 },
+  { cat:"快捷键", type:"quiz", q:"在 Excel 中，单元格内换行的快捷键是？", opts:["Ctrl+Enter","Shift+Enter","Alt+Enter","Tab"], ans:2 },
+  { cat:"快捷键", type:"quiz", q:"在 Excel 中，F4 键可以做什么？", opts:["关闭窗口","重复上一步操作 / 切换引用类型","打开帮助","保存文件"], ans:1 },
+  { cat:"快捷键", type:"quiz", q:"Ctrl+PageDown 在 Excel 中的作用是？", opts:["翻到下一页","切换到下一个工作表","向下滚动一屏","打开页面设置"], ans:1 },
+  { cat:"快捷键", type:"quiz", q:"另存为的快捷键是？", opts:["Ctrl+S","Ctrl+Shift+S","F12","F2"], ans:2 },
+  { cat:"快捷键", type:"quiz", q:"在文档中插入分页符的快捷键是？", opts:["Ctrl+P","Ctrl+Enter","Ctrl+Shift+Enter","Alt+P"], ans:1 },
+  { cat:"快捷键", type:"quiz", q:"Excel 中选中整列的快捷键是？", opts:["Ctrl+A","Ctrl+Space","Shift+Space","Alt+Space"], ans:1 },
+  { cat:"快捷键", type:"quiz", q:"编辑当前单元格的快捷键（进入编辑模式）是？", opts:["F1","F2","F4","F5"], ans:1 },
+  { cat:"快捷键", type:"quiz", q:"打开'查找和替换'对话框的快捷键是？", opts:["Ctrl+F","Ctrl+H","Ctrl+G","Ctrl+R"], ans:1 },
+  { cat:"快捷键", type:"quiz", q:"拼写检查的快捷键是？", opts:["F5","F7","F9","F12"], ans:1 },
+
+  // ---------- 理论知识 ----------
+  { cat:"理论知识", type:"quiz", q:"WPS 表格中，一个工作簿最多可以有多少行？", opts:["65536","1048576","1000000","无限制"], ans:1 },
+  { cat:"理论知识", type:"quiz", q:".xlsx 和 .xls 格式的主要区别？", opts:[".xlsx 更老",".xlsx 基于XML，行数更多兼容性更好",".xls 文件更小","没有区别"], ans:1 },
+  { cat:"理论知识", type:"quiz", q:"修改论文排版时，应优先使用什么来统一格式？", opts:["手动调格式","格式刷逐个修改","样式（标题1/正文等）","全部选中改字体"], ans:2 },
+  { cat:"理论知识", type:"quiz", q:"在 PPT 中，'对齐工具'在哪可以找到？", opts:["开始 → 排列 → 对齐","插入 → 形状","设计 → 主题","切换 → 效果"], ans:0 },
+  { cat:"理论知识", type:"quiz", q:"什么是'首行缩进2字符'？", opts:["所有行缩进","第一行向右缩进2个字符","最后一行缩进","悬挂缩进"], ans:1 },
+];
+
+// 快捷键对战 —— 独立题库
+const SHORTCUT_BANK = [
+  { cat:"通用", prompt:"保存文件", answer:"Ctrl+S" },
+  { cat:"通用", prompt:"复制", answer:"Ctrl+C" },
+  { cat:"通用", prompt:"粘贴", answer:"Ctrl+V" },
+  { cat:"通用", prompt:"剪切", answer:"Ctrl+X" },
+  { cat:"通用", prompt:"撤销", answer:"Ctrl+Z" },
+  { cat:"通用", prompt:"重做/恢复", answer:"Ctrl+Y" },
+  { cat:"通用", prompt:"全选", answer:"Ctrl+A" },
+  { cat:"通用", prompt:"查找", answer:"Ctrl+F" },
+  { cat:"通用", prompt:"替换", answer:"Ctrl+H" },
+  { cat:"通用", prompt:"打印", answer:"Ctrl+P" },
+  { cat:"通用", prompt:"新建文档", answer:"Ctrl+N" },
+  { cat:"通用", prompt:"打开文件", answer:"Ctrl+O" },
+  { cat:"通用", prompt:"加粗", answer:"Ctrl+B" },
+  { cat:"通用", prompt:"斜体", answer:"Ctrl+I" },
+  { cat:"通用", prompt:"下划线", answer:"Ctrl+U" },
+  { cat:"通用", prompt:"插入超链接", answer:"Ctrl+K" },
+  { cat:"通用", prompt:"另存为", answer:"F12" },
+  { cat:"通用", prompt:"拼写检查", answer:"F7" },
+  { cat:"Excel", prompt:"编辑当前单元格", answer:"F2" },
+  { cat:"Excel", prompt:"单元格内换行", answer:"Alt+Enter" },
+  { cat:"Excel", prompt:"重复上一步操作", answer:"F4" },
+  { cat:"Excel", prompt:"选中整列", answer:"Ctrl+Space" },
+  { cat:"Excel", prompt:"选中整行", answer:"Shift+Space" },
+  { cat:"Excel", prompt:"跳转到数据区域边缘", answer:"Ctrl+方向键" },
+  { cat:"Excel", prompt:"选中到数据区域边缘", answer:"Ctrl+Shift+方向键" },
+  { cat:"Excel", prompt:"插入当前日期", answer:"Ctrl+;" },
+  { cat:"Excel", prompt:"插入当前时间", answer:"Ctrl+Shift+;" },
+  { cat:"Excel", prompt:"切换工作表(下一个)", answer:"Ctrl+PageDown" },
+  { cat:"Excel", prompt:"切换工作表(上一个)", answer:"Ctrl+PageUp" },
+  { cat:"Excel", prompt:"打开单元格格式对话框", answer:"Ctrl+1" },
+  { cat:"Excel", prompt:"自动筛选", answer:"Ctrl+Shift+L" },
+  { cat:"Excel", prompt:"创建表格", answer:"Ctrl+T" },
+  { cat:"Excel", prompt:"定位", answer:"F5" },
+  { cat:"Word", prompt:"插入分页符", answer:"Ctrl+Enter" },
+  { cat:"Word", prompt:"清除格式", answer:"Ctrl+Shift+N" },
+  { cat:"Word", prompt:"左对齐", answer:"Ctrl+L" },
+  { cat:"Word", prompt:"居中对齐", answer:"Ctrl+E" },
+  { cat:"Word", prompt:"右对齐", answer:"Ctrl+R" },
+  { cat:"Word", prompt:"两端对齐", answer:"Ctrl+J" },
+  { cat:"通用", prompt:"增大字号", answer:"Ctrl+Shift+>" },
+  { cat:"通用", prompt:"减小字号", answer:"Ctrl+Shift+<" },
+];
+
+// 函数连连看 —— 配对数据
+const MATCH_PAIRS = [
+  ["VLOOKUP", "垂直查找，在首列搜索并返回对应行的值"],
+  ["SUMIF", "对满足单个条件的单元格求和"],
+  ["COUNTIF", "统计满足条件的单元格个数"],
+  ["MID", "从文本中间提取指定数量的字符"],
+  ["TEXT", "将数字转换为指定格式的文本"],
+  ["TRIM", "删除文本中多余的空格"],
+  ["IF", "根据条件判断，返回不同的值"],
+  ["INDEX", "返回表格中指定行列交叉处的值"],
+  ["MATCH", "返回指定值在区域中的位置"],
+  ["ROUND", "按指定位数对数字四舍五入"],
+  ["COUNTA", "统计非空单元格的个数"],
+  ["DATEDIF", "计算两个日期之间的差值"],
+];
+
+// ==================== 游戏状态 ====================
+let state = {
+  game: null,           // 'shortcut'|'quiz'|'speed'|'match'
+  score: 0,
+  combo: 0,
+  maxCombo: 0,
+  questionIdx: 0,
+  questions: [],
+  correctCount: 0,
+  totalCount: 0,
+  timer: null,
+  timeLeft: 60,
+  answered: false,      // 当前题是否已答
+
+  // 快捷键模式专用
+  shortcutCurrent: null,
+  listening: false,
+  keysDown: new Set(),
+
+  // 连连看专用
+  matchCards: [],
+  matchSelected: null,
+  matchFound: 0,
+};
+
+// ==================== 数据持久化 ====================
+function loadProgress() {
+  try {
+    return JSON.parse(localStorage.getItem('wps_trainer')) || { xp:0, level:1, streak:0, badges:[] };
+  } catch { return { xp:0, level:1, streak:0, badges:[] }; }
+}
+function saveProgress(p) { localStorage.setItem('wps_trainer', JSON.stringify(p)); }
+
+let progress = loadProgress();
+const XP_PER_LEVEL = 200;
+
+function addXP(amount) {
+  progress.xp += amount;
+  while (progress.xp >= progress.level * XP_PER_LEVEL) {
+    progress.xp -= progress.level * XP_PER_LEVEL;
+    progress.level++;
+    showPopup('🎉 升级！Lv.' + progress.level);
+    checkBadges();
+  }
+  saveProgress(progress);
+  updateStatsUI();
+}
+
+function addStreak() {
+  state.combo++;
+  progress.streak = Math.max(progress.streak, state.combo);
+  if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+  if (state.combo > 0 && state.combo % 5 === 0) {
+    showPopup('🔥 ' + state.combo + ' 连击！');
+  }
+  saveProgress(progress);
+}
+
+function resetStreak() {
+  state.combo = 0;
+  saveProgress(progress);
+}
+
+function showPopup(text) {
+  const el = document.createElement('div');
+  el.className = 'combo-popup';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 800);
+}
+
+// 成就系统
+const ALL_BADGES = [
+  { id:'first_blood', name:'初次试炼', desc:'完成第一局游戏', emoji:'🗡️' },
+  { id:'combo5', name:'连击入门', desc:'达成5连击', emoji:'🔥' },
+  { id:'combo10', name:'连击达人', desc:'达成10连击', emoji:'💥' },
+  { id:'lv5', name:'初级修炼者', desc:'达到5级', emoji:'⭐' },
+  { id:'lv10', name:'中级修炼者', desc:'达到10级', emoji:'🌟' },
+  { id:'shortcut_master', name:'快捷键大师', desc:'快捷键模式答对20题', emoji:'⌨️' },
+  { id:'quiz_ace', name:'知识达人', desc:'闯关模式答对30题', emoji:'🧠' },
+  { id:'speed_demon', name:'极速挑战者', desc:'限时冲刺单局超过15题', emoji:'⚡' },
+  { id:'match_king', name:'连连看冠军', desc:'连连看模式完成3局', emoji:'🧩' },
+];
+
+function checkBadges() {
+  let changed = false;
+  for (const b of ALL_BADGES) {
+    if (progress.badges.includes(b.id)) continue;
+    let earned = false;
+    if (b.id === 'lv5' && progress.level >= 5) earned = true;
+    if (b.id === 'lv10' && progress.level >= 10) earned = true;
+    if (b.id === 'combo5' && progress.streak >= 5) earned = true;
+    if (b.id === 'combo10' && progress.streak >= 10) earned = true;
+    if (earned) { progress.badges.push(b.id); changed = true; showPopup(b.emoji + ' 获得成就：' + b.name); }
+  }
+  if (changed) { saveProgress(progress); renderBadges(); }
+}
+
+function earnBadge(id) {
+  if (!progress.badges.includes(id)) {
+    progress.badges.push(id);
+    saveProgress(progress);
+    renderBadges();
+    const b = ALL_BADGES.find(x => x.id === id);
+    if (b) showPopup(b.emoji + ' 获得成就：' + b.name);
+  }
+}
+
+function renderBadges() {
+  const container = document.getElementById('achievements');
+  container.innerHTML = ALL_BADGES.map(b => {
+    const earned = progress.badges.includes(b.id);
+    return `<span class="achievement${earned ? '' : ' locked'}" title="${b.desc}">${earned ? b.emoji : '🔒'} ${b.name}</span>`;
+  }).join('');
+}
+
+function updateStatsUI() {
+  document.getElementById('level').textContent = progress.level;
+  document.getElementById('xp').textContent = progress.xp;
+  document.getElementById('streak').textContent = state.combo;
+  const pct = Math.min(100, (progress.xp / (progress.level * XP_PER_LEVEL)) * 100);
+  document.getElementById('xp-bar').style.width = pct + '%';
+}
+
+// ==================== UI 切换 ====================
+function goMenu() {
+  stopAll();
+  state.game = null;
+  document.getElementById('menu').style.display = '';
+  document.getElementById('game-area').classList.remove('active');
+  document.getElementById('result-screen').classList.remove('active');
+}
+
+function showGame(title) {
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('game-area').classList.add('active');
+  document.getElementById('result-screen').classList.remove('active');
+  document.getElementById('game-title').textContent = title;
+}
+
+function showResult() {
+  document.getElementById('game-area').classList.remove('active');
+  document.getElementById('result-screen').classList.add('active');
+  document.getElementById('result-score').textContent = state.correctCount + '/' + state.totalCount;
+  document.getElementById('result-detail').textContent =
+    '得分: ' + state.score + ' | 最高连击: ' + state.maxCombo;
+  const xpGain = state.score;
+  document.getElementById('result-xp').innerHTML =
+    '<span style="color:var(--primary-glow)">+ ' + xpGain + ' XP</span>';
+  addXP(xpGain);
+
+  if (state.totalCount > 0 && !progress.badges.includes('first_blood')) {
+    earnBadge('first_blood');
+  }
+  if (state.game === 'shortcut' && state.correctCount >= 20) earnBadge('shortcut_master');
+  if (state.game === 'quiz' && state.correctCount >= 30) earnBadge('quiz_ace');
+  if (state.game === 'speed' && state.correctCount >= 15) earnBadge('speed_demon');
+}
+
+function stopAll() {
+  if (state.timer) { clearInterval(state.timer); state.timer = null; }
+  state.listening = false;
+  document.removeEventListener('keydown', shortcutKeyHandler);
+  document.removeEventListener('keyup', shortcutKeyUpHandler);
+}
+
+// ==================== 游戏入口 ====================
+function startGame(type) {
+  stopAll();
+  state.game = type;
+  state.score = 0;
+  state.combo = 0;
+  state.maxCombo = 0;
+  state.correctCount = 0;
+  state.totalCount = 0;
+  state.questionIdx = 0;
+  state.answered = false;
+
+  if (type === 'shortcut') {
+    state.questions = shuffle([...SHORTCUT_BANK]);
+    state.questionIdx = 0;
+    showGame('⌨️ 快捷键对战');
+    renderShortcutGame();
+  } else if (type === 'quiz') {
+    state.questions = shuffle([...QUIZ_BANK]);
+    state.questionIdx = 0;
+    showGame('📝 技能闯关');
+    renderQuizGame();
+  } else if (type === 'speed') {
+    state.questions = shuffle([...QUIZ_BANK, ...SHORTCUT_BANK.map(s => ({
+      cat:"快捷键", type:"quiz",
+      q:'"' + s.prompt + '" 的快捷键是？',
+      opts: shuffleFour(s.answer, SHORTCUT_BANK.filter(x=>x.answer!==s.answer).map(x=>x.answer)),
+      ans: 0
+    }))]);
+    state.questionIdx = 0;
+    state.timeLeft = 60;
+    showGame('⚡ 限时冲刺');
+    renderSpeedGame();
+  } else if (type === 'match') {
+    showGame('🧩 函数连连看');
+    renderMatchGame();
+  }
+  updateStatsUI();
+}
+
+function restartGame() {
+  if (state.game) startGame(state.game);
+}
+
+// ==================== 辅助函数 ====================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function shuffleFour(correct, others) {
+  const pool = shuffle(others).slice(0, 3);
+  const options = [correct, ...pool];
+  return shuffle(options);
+}
+
+// ==================== 快捷键对战 ====================
+let _shortcutKeysBuffer = [];
+
+function shortcutKeyHandler(e) {
+  if (state.game !== 'shortcut' || !state.listening || state.answered) return;
+  e.preventDefault();
+
+  const keys = [];
+  if (e.ctrlKey) keys.push('Ctrl');
+  if (e.altKey) keys.push('Alt');
+  if (e.shiftKey) keys.push('Shift');
+
+  // 识别特殊键
+  const specialKeys = {
+    'Enter':'Enter', 'Space':'Space', 'Tab':'Tab', 'Escape':'Esc',
+    'ArrowUp':'↑', 'ArrowDown':'↓', 'ArrowLeft':'←', 'ArrowRight':'→',
+    'PageUp':'PageUp', 'PageDown':'PageDown',
+    'Home':'Home', 'End':'End',
+    ';':';', '.':'.', ',':',', '/':'/', '\\':'\\',
+    '`':'`', "'":"'", '[':'[', ']':']', '-':'-', '=':'=',
+    '>':'>', '<':'<',
+  };
+
+  let mainKey = '';
+  if (e.key === 'Control' || e.key === 'Alt' || e.key === 'Shift') {
+    // 只按了修饰键，更新显示
+    updateShortcutDisplay(keys);
+    return;
+  }
+
+  if (e.key === 'Backspace' || e.key === 'Delete') {
+    _shortcutKeysBuffer = [];
+    updateShortcutDisplay(keys);
+    return;
+  }
+
+  if (e.key.length === 1) {
+    mainKey = e.key.toUpperCase();
+  } else if (specialKeys[e.key]) {
+    mainKey = specialKeys[e.key];
+  } else if (e.key.startsWith('F') && parseInt(e.key.slice(1))) {
+    mainKey = e.key;
+  } else {
+    mainKey = e.key;
+  }
+
+  if (mainKey) {
+    keys.push(mainKey);
+    const shortcut = keys.join('+');
+    checkShortcutAnswer(shortcut);
+  }
+}
+
+function shortcutKeyUpHandler(e) {
+  if (state.game !== 'shortcut' || !state.listening) return;
+  // 当所有键都释放时，重置
+}
+
+function updateShortcutDisplay(keys) {
+  const display = document.getElementById('shortcut-display');
+  if (keys.length > 0) {
+    display.textContent = keys.join('+') + '+...';
+  } else {
+    display.textContent = '按下快捷键...';
+  }
+}
+
+function checkShortcutAnswer(input) {
+  if (!state.shortcutCurrent || state.answered) return;
+  state.answered = true;
+  state.totalCount++;
+
+  const expected = state.shortcutCurrent.answer;
+  // 标准化比较
+  const normalize = s => s.replace(/\s/g, '').toLowerCase().replace('arrowup','↑').replace('arrowdown','↓').replace('arrowleft','←').replace('arrowright','→').replace('pageup','PageUp').replace('pagedown','PageDown').replace('方向键','方向键');
+  const userNorm = input.replace(/\s/g, '').toLowerCase();
+
+  // 对于"方向键"这种模糊的答案，做特殊处理
+  let expectedNorm = expected.replace(/\s/g, '').toLowerCase();
+  // 检查Ctrl+Shift+> 和 Ctrl+Shift+< 的特殊情况
+  if (expected === 'Ctrl+Shift+>') expectedNorm = 'ctrl+shift+.';
+  if (expected === 'Ctrl+Shift+<') expectedNorm = 'ctrl+shift+,';
+
+  const correct = userNorm === expectedNorm || userNorm === expected.replace(/\s/g, '').toLowerCase();
+
+  const display = document.getElementById('shortcut-display');
+  if (correct) {
+    state.correctCount++;
+    state.score += 10 + state.combo * 3;
+    addStreak();
+    display.style.borderColor = 'var(--success)';
+    display.style.color = 'var(--success)';
+    display.textContent = '✓ ' + input;
+    showPopup('✅ 正确！');
+  } else {
+    resetStreak();
+    display.style.borderColor = 'var(--danger)';
+    display.style.color = 'var(--danger)';
+    display.textContent = '✗ ' + input;
+    showAnswer('正确答案：' + expected);
+  }
+
+  setTimeout(() => {
+    display.style.borderColor = '';
+    display.style.color = '';
+    display.textContent = '按下快捷键...';
+    if (state.questionIdx < state.questions.length - 1) {
+      state.questionIdx++;
+      state.answered = false;
+      state.shortcutCurrent = state.questions[state.questionIdx];
+      renderShortcutQuestion();
+    } else {
+      state.questions = shuffle([...SHORTCUT_BANK]);
+      state.questionIdx = 0;
+      state.answered = false;
+      state.shortcutCurrent = state.questions[0];
+      renderShortcutQuestion();
+    }
+  }, 900);
+}
+
+function showAnswer(text) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--card);color:var(--danger);padding:10px 24px;border-radius:20px;font-size:0.95em;z-index:100;border:1px solid var(--danger);';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+function renderShortcutGame() {
+  state.shortcutCurrent = state.questions[state.questionIdx];
+  state.listening = true;
+  state.answered = false;
+  document.addEventListener('keydown', shortcutKeyHandler);
+  document.addEventListener('keyup', shortcutKeyUpHandler);
+  const content = document.getElementById('game-content');
+  content.innerHTML = `
+    <div class="question-card">
+      <span class="q-category">${state.shortcutCurrent.cat}</span>
+      <div class="q-prompt">请按下 <strong>"${state.shortcutCurrent.prompt}"</strong> 的快捷键</div>
+      <div class="q-hint">在键盘上直接按下对应的组合键</div>
+    </div>
+    <div id="shortcut-input-area">
+      <div id="shortcut-display" class="listening">按下快捷键...</div>
+      <button id="reset-shortcut" onclick="resetShortcutInput()">重输</button>
+    </div>
+    <div style="text-align:center;color:var(--text-dim);font-size:0.8em;margin-top:8px;">
+      进度：${state.questionIdx + 1} / ${state.questions.length}
+    </div>
+  `;
+}
+
+function resetShortcutInput() {
+  if (state.answered) return;
+  _shortcutKeysBuffer = [];
+  const display = document.getElementById('shortcut-display');
+  if (display) display.textContent = '按下快捷键...';
+}
+
+function renderShortcutQuestion() {
+  const card = document.querySelector('.question-card');
+  if (!card) return;
+  card.querySelector('.q-category').textContent = state.shortcutCurrent.cat;
+  card.querySelector('.q-prompt').innerHTML = '请按下 <strong>"' + state.shortcutCurrent.prompt + '"</strong> 的快捷键';
+  const progress = document.querySelector('#game-content > div:last-child');
+  if (progress) progress.innerHTML = '进度：' + (state.questionIdx + 1) + ' / ' + state.questions.length;
+  updateStatsUI();
+}
+
+// ==================== 技能闯关 ====================
+function renderQuizGame() {
+  if (state.questionIdx >= state.questions.length) {
+    state.questions = shuffle([...QUIZ_BANK]);
+    state.questionIdx = 0;
+  }
+  const q = state.questions[state.questionIdx];
+  state.answered = false;
+  const content = document.getElementById('game-content');
+  content.innerHTML = `
+    <div class="question-card">
+      <span class="q-category">${q.cat}</span>
+      <div class="q-prompt">${q.q}</div>
+    </div>
+    <div class="options-grid">
+      ${q.opts.map((opt, i) => `
+        <button class="option-btn" onclick="answerQuiz(${i})">${String.fromCharCode(65+i)}. ${opt}</button>
+      `).join('')}
+    </div>
+    <div style="text-align:center;color:var(--text-dim);font-size:0.8em;margin-top:12px;">
+      进度：${state.questionIdx + 1} / ${state.questions.length}
+    </div>
+  `;
+}
+
+function answerQuiz(choice) {
+  if (state.answered) return;
+  state.answered = true;
+  state.totalCount++;
+  const q = state.questions[state.questionIdx];
+  const correct = choice === q.ans;
+  const btns = document.querySelectorAll('.option-btn');
+
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === choice) btn.classList.add('wrong');
+  });
+
+  if (correct) {
+    state.correctCount++;
+    state.score += 10 + state.combo * 2;
+    addStreak();
+  } else {
+    resetStreak();
+  }
+
+  updateStatsUI();
+  setTimeout(nextQuiz, 1000);
+}
+
+function nextQuiz() {
+  if (state.game !== 'quiz') return;
+  if (state.questionIdx < state.questions.length - 1) {
+    state.questionIdx++;
+    renderQuizGame();
+  } else {
+    showResult();
+  }
+}
+
+// ==================== 限时冲刺 ====================
+function renderSpeedGame() {
+  if (state.questionIdx >= state.questions.length) {
+    state.questions = shuffle([...QUIZ_BANK]);
+    state.questionIdx = 0;
+  }
+  const q = state.questions[state.questionIdx];
+  state.answered = false;
+  const content = document.getElementById('game-content');
+  content.innerHTML = `
+    <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+    <div style="text-align:center;font-size:1.4em;font-weight:bold;margin-bottom:4px;color:var(--warning);" id="time-display">60s</div>
+    <div class="question-card">
+      <span class="q-category">${q.cat}</span>
+      <div class="q-prompt">${q.q}</div>
+    </div>
+    <div class="options-grid">
+      ${q.opts.map((opt, i) => `
+        <button class="option-btn" onclick="answerSpeed(${i})">${String.fromCharCode(65+i)}. ${opt}</button>
+      `).join('')}
+    </div>
+    <div style="text-align:center;color:var(--text-dim);font-size:0.8em;margin-top:8px;">
+      已答：${state.correctCount} 题 | 得分：${state.score}
+    </div>
+  `;
+  startSpeedTimer();
+}
+
+function startSpeedTimer() {
+  if (state.timer) clearInterval(state.timer);
+  state.timer = setInterval(() => {
+    state.timeLeft--;
+    document.getElementById('time-display').textContent = state.timeLeft + 's';
+    const bar = document.getElementById('timer-bar');
+    bar.style.width = (state.timeLeft / 60 * 100) + '%';
+    if (state.timeLeft <= 15) bar.classList.add('danger');
+    else if (state.timeLeft <= 30) bar.classList.add('warning');
+
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timer);
+      state.timer = null;
+      stopAll();
+      showResult();
+    }
+  }, 1000);
+}
+
+function answerSpeed(choice) {
+  if (state.answered || state.timeLeft <= 0) return;
+  state.answered = true;
+  state.totalCount++;
+  const q = state.questions[state.questionIdx];
+  const correct = choice === q.ans;
+  const btns = document.querySelectorAll('.option-btn');
+
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === choice) btn.classList.add('wrong');
+  });
+
+  if (correct) {
+    state.correctCount++;
+    state.score += 15 + state.combo * 3;
+    addStreak();
+  } else {
+    resetStreak();
+  }
+
+  updateStatsUI();
+
+  setTimeout(() => {
+    if (state.timeLeft <= 0 || state.game !== 'speed') return;
+    state.questionIdx++;
+    renderSpeedGame();
+  }, 500);
+}
+
+// ==================== 函数连连看 ====================
+function renderMatchGame() {
+  state.matchFound = 0;
+  state.matchSelected = null;
+  state.score = 0;
+  state.correctCount = 0;
+  state.totalCount = 0;
+  state.combo = 0;
+
+  const pairs = shuffle([...MATCH_PAIRS]).slice(0, 8);
+  const cards = [];
+  pairs.forEach((pair, i) => {
+    cards.push({ id: i * 2, pairId: i, type: 'func', text: pair[0] });
+    cards.push({ id: i * 2 + 1, pairId: i, type: 'desc', text: pair[1] });
+  });
+  state.matchCards = shuffle(cards);
+
+  const content = document.getElementById('game-content');
+  content.innerHTML = `
+    <div class="match-grid" id="match-grid">
+      ${state.matchCards.map(c => `
+        <div class="match-card" data-id="${c.id}" data-pair="${c.pairId}" data-type="${c.type}"
+             onclick="selectMatchCard(${c.id})">${c.text}</div>
+      `).join('')}
+    </div>
+    <div style="text-align:center;margin-top:16px;color:var(--text-dim);">
+      已配对：<span id="match-progress">0</span> / ${pairs.length}
+    </div>
+  `;
+}
+
+function selectMatchCard(cardId) {
+  if (state.game !== 'match') return;
+  const card = state.matchCards.find(c => c.id === cardId);
+  if (!card) return;
+  const el = document.querySelector(`.match-card[data-id="${cardId}"]`);
+  if (!el || el.classList.contains('matched') || el.classList.contains('selected')) return;
+
+  if (state.matchSelected === null) {
+    // 第一次选择
+    state.matchSelected = cardId;
+    el.classList.add('selected');
+  } else {
+    // 第二次选择 — 判断是否配对
+    const firstId = state.matchSelected;
+    const firstCard = state.matchCards.find(c => c.id === firstId);
+    const firstEl = document.querySelector(`.match-card[data-id="${firstId}"]`);
+    state.matchSelected = null;
+
+    if (firstCard.pairId === card.pairId && firstCard.type !== card.type) {
+      // 配对成功
+      state.correctCount++;
+      state.score += 20 + (state.combo || 0) * 5;
+      state.matchFound++;
+      el.classList.add('matched');
+      firstEl.classList.add('matched');
+      firstEl.classList.remove('selected');
+      addStreak();
+      document.getElementById('match-progress').textContent = state.matchFound;
+      updateStatsUI();
+
+      if (state.matchFound >= 8) {
+        state.totalCount = state.matchFound;
+        earnBadge('match_king');
+        setTimeout(() => showResult(), 600);
+      }
+    } else {
+      // 配对失败
+      resetStreak();
+      el.classList.add('wrong-flash');
+      firstEl.classList.add('wrong-flash');
+      firstEl.classList.remove('selected');
+      setTimeout(() => {
+        el.classList.remove('wrong-flash');
+        firstEl.classList.remove('wrong-flash');
+      }, 400);
+    }
+  }
+}
+
+// ==================== 初始化 ====================
+function init() {
+  renderBadges();
+  updateStatsUI();
+  // 初始状态显示菜单
+  document.getElementById('menu').style.display = '';
+  document.getElementById('game-area').classList.remove('active');
+  document.getElementById('result-screen').classList.remove('active');
+}
+
+init();
+</script>
+</body>
+</html>
