@@ -256,6 +256,56 @@
   .achievement.locked { opacity: 0.35; }
 
   .hidden { display: none !important; }
+
+  /* Scenario Mode */
+  .scenario-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; margin-bottom: 14px;
+  }
+  .scenario-card .story { font-size: 0.95em; line-height: 1.7; margin-bottom: 16px; color: var(--text); }
+  .scenario-card .story strong { color: var(--warning); }
+  .mini-table {
+    width: 100%; border-collapse: collapse; margin: 12px 0 16px;
+    font-size: 0.82em; font-family: "Consolas","Microsoft YaHei",monospace;
+  }
+  .mini-table th {
+    background: #2d2d5a; color: var(--primary-glow); padding: 8px 10px;
+    border: 1px solid var(--border); text-align: left; font-weight: bold;
+  }
+  .mini-table td {
+    padding: 6px 10px; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02); color: var(--text);
+  }
+  .mini-table tr:nth-child(even) td { background: rgba(255,255,255,0.04); }
+  .cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cat-tab {
+    background: var(--card); color: var(--text-dim); border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.82em;
+    transition: all 0.2s;
+  }
+  .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .cat-tab:hover:not(.active) { border-color: var(--text-dim); }
+  .skill-tag {
+    display: inline-block; background: rgba(108,92,231,0.2); color: var(--primary-glow);
+    padding: 3px 10px; border-radius: 14px; font-size: 0.75em; margin: 3px;
+    cursor: pointer; border: 1px solid transparent; transition: all 0.2s;
+  }
+  .skill-tag:hover { border-color: var(--primary); }
+  .explanation-box {
+    background: rgba(0,184,148,0.06); border: 1px solid rgba(0,184,148,0.25);
+    border-radius: var(--radius); padding: 18px; margin-top: 14px; font-size: 0.88em;
+    line-height: 1.7;
+  }
+  .explanation-box strong { color: var(--success); }
+  .related-link {
+    display: inline-block; color: var(--primary-glow); cursor: pointer;
+    padding: 4px 10px; font-size: 0.82em; text-decoration: underline;
+    transition: color 0.2s;
+  }
+  .related-link:hover { color: var(--warning); }
+  .scenario-progress {
+    text-align: center; color: var(--text-dim); font-size: 0.85em; margin-top: 10px;
+  }
 </style>
 </head>
 <body>
@@ -295,6 +345,12 @@
       <span class="card-emoji">🧩</span>
       <h3>函数连连看</h3>
       <p>将函数名与功能描述配对，翻牌记忆大挑战</p>
+    </div>
+    <div class="menu-card" onclick="startGame('scenario')">
+      <span class="card-emoji">🏢</span>
+      <span class="badge">实战</span>
+      <h3>场景实战</h3>
+      <p>真实工作场景+模拟数据，选出正确方案，可跳转关联场景</p>
     </div>
   </div>
 
@@ -433,9 +489,311 @@ const MATCH_PAIRS = [
   ["DATEDIF", "计算两个日期之间的差值"],
 ];
 
+// ==================== 场景实战题库 ====================
+const SCENARIO_BANK = [
+  {
+    id:'s1', title:'月底销售汇总', cat:'数据处理',
+    skills:['数据透视表','SUMIF'],
+    story:'你是销售助理。月底了，<strong>老板要你统计每个销售员的总销售额</strong>。下面是本月的销售明细表：',
+    table:{ h:['日期','销售员','产品','金额(元)'], rows:[
+      ['5/1','张三','产品A','5,000'],['5/2','李四','产品B','8,000'],['5/3','张三','产品C','3,500'],
+      ['5/4','王五','产品A','6,200'],['5/5','李四','产品C','4,100'],['5/6','张三','产品B','7,800'],
+      ['5/7','王五','产品B','2,900'],['5/8','李四','产品A','9,300']
+    ]},
+    q:'最快速统计每个销售员总销售额的方法是什么？',
+    opts:[
+      '用计算器手动加每个人的金额',
+      '插入数据透视表，销售员→行，金额→值',
+      '用眼睛一行行找出每个销售员，手写到新表',
+      '按金额排序后手动抄'
+    ],
+    ans:1,
+    explain:'<strong>数据透视表</strong>是汇总数据的首选工具。步骤：① 选中数据区域 → ② 插入 → 数据透视表 → ③ 将"销售员"拖到<strong>行标签</strong>，将"金额"拖到<strong>值区域</strong>。3 秒完成！<br><br>也可以用 <strong>=SUMIF(销售员列,"张三",金额列)</strong> 逐个统计。',
+    related:['s7','s11']
+  },
+  {
+    id:'s2', title:'客户信息分列', cat:'数据处理',
+    skills:['分列','LEFT','MID','FIND'],
+    story:'你收到一份客户名单，<strong>姓名和电话粘在同一个单元格里</strong>，中间用短横线 "-" 隔开，比如 "张三-13800138000"。你需要把姓名和电话分开到两列。',
+    table:{ h:['原始数据（A列）'], rows:[
+      ['张三-13800138000'],['李四-13912345678'],['王五-13798765432'],
+      ['赵六-13655551234'],['陈七-13566667890']
+    ]},
+    q:'以下哪种方法最简单实用？',
+    opts:[
+      '逐个单元格手动剪切粘贴',
+      '选中该列 → 数据 → 分列 → 按分隔符 "-"',
+      '用查找替换把 "-" 换成空格',
+      '复制到 Word 处理好再粘回来'
+    ],
+    ans:1,
+    explain:'<strong>分列功能</strong>专为此场景设计。步骤：① 选中数据列 → ② <strong>数据 → 分列</strong> → ③ 选择"按分隔符号" → ④ 勾选"其他"输入 "-" → ⑤ 完成。一秒拆成两列！<br><br>进阶：也可用 <strong>=LEFT(A1,FIND("-",A1)-1)</strong> 取姓名，<strong>=MID(A1,FIND("-",A1)+1,99)</strong> 取电话。',
+    related:['s5','s6']
+  },
+  {
+    id:'s3', title:'合同批量生成', cat:'文档排版',
+    skills:['邮件合并','域'],
+    story:'公司要给 <strong>100 个客户发年度合同</strong>。你有一个 Excel 表（客户名、金额、日期）和一个 Word 合同模板。<strong>每个客户的合同内容一样，只是姓名/金额/日期不同</strong>。',
+    table:{ h:['客户名','合同金额','签约日期'], rows:[
+      ['甲公司','500,000','2026/5/15'],['乙公司','320,000','2026/5/18'],
+      ['丙公司','780,000','2026/5/20'],['...等100行','...','...']
+    ]},
+    q:'如何一次性生成100份合同？',
+    opts:[
+      '打开模板，手动改100次名字和金额',
+      '邮件合并：Word模板插入合并域 → 选择Excel数据源 → 完成并合并',
+      '在Excel里直接排版打印',
+      '复制100个Word文档逐个改'
+    ],
+    ans:1,
+    explain:'<strong>邮件合并</strong>是批量文档生成的利器。步骤：① Word中写好合同模板 → ② <strong>邮件 → 选择收件人 → 使用现有列表</strong>（选Excel）→ ③ 在模板中<strong>插入合并域</strong>（客户名、金额等）→ ④ <strong>完成并合并 → 编辑单个文档</strong>。瞬间生成100份！',
+    related:['s4','s8']
+  },
+  {
+    id:'s4', title:'长论文排版', cat:'文档排版',
+    skills:['样式','目录','页眉页脚','分节符'],
+    story:'你写了一篇 <strong>50 页的毕业论文</strong>，现在需要：标题统一格式、自动生成目录、不同章节不同页眉、页码从正文开始。',
+    table:{ h:['当前状态','期望效果'], rows:[
+      ['标题全是手动调的字号','所有同级别标题格式一致'],
+      ['没有目录','自动生成可点击跳转的目录'],
+      ['所有页眉一样','每章页眉显示该章标题'],
+      ['封面也有页码','正文第1页从1开始编页码']
+    ]},
+    q:'实现以上所有需求的正确路线是？',
+    opts:[
+      '纯手动调整，一页一页改',
+      '用样式设标题 → 自动目录 → 分节符隔开各部分 → 页眉页脚设置',
+      '在Excel里排版，然后截图贴到Word',
+      '只调字体字号，目录手动打字进去'
+    ],
+    ans:1,
+    explain:'长文档排版四板斧：<br>① <strong>样式</strong>：选中标题 → 应用"标题1/标题2"样式，格式瞬间统一<br>② <strong>目录</strong>：引用 → 目录 → 自动目录，点一下生成<br>③ <strong>分节符</strong>：布局 → 分隔符 → 下一页分节符，隔开封面/目录/正文<br>④ <strong>页眉页脚</strong>：取消"链接到前一节"，让每节独立设置<br>这套流程在所有专业文档中通用！',
+    related:['s3','s8']
+  },
+  {
+    id:'s5', title:'身份证提取生日', cat:'数据处理',
+    skills:['MID','DATE','TEXT'],
+    story:'HR 给了你一份员工身份证号清单，<strong>需要从中提取每个人的出生日期</strong>。身份证号的第7-14位是出生日期（格式：YYYYMMDD）。',
+    table:{ h:['姓名','身份证号'], rows:[
+      ['张三','110101199003152345'],['李四','320102198807211234'],
+      ['王五','440103199512083456'],['赵六','510104200102286789']
+    ]},
+    q:'提取出生日期的正确公式是什么？',
+    opts:[
+      '=LEFT(B2,14)',
+      '=MID(B2,7,8)',
+      '=RIGHT(B2,8)',
+      '=FIND("199",B2)'
+    ],
+    ans:1,
+    explain:'<strong>=MID(B2,7,8)</strong> 从第7位开始取8个字符，得到 "19900315"。<br><br>美化版：<strong>=TEXT(MID(B2,7,8),"0000-00-00")</strong> 得到 "1990-03-15"。<br>真正的日期格式：<strong>=DATE(MID(B2,7,4),MID(B2,11,2),MID(B2,13,2))</strong>。<br><br>MID(文本,起始位置,取几位) 是最常用的文本提取函数之一。',
+    related:['s2','s11']
+  },
+  {
+    id:'s6', title:'数据去空格清理', cat:'数据处理',
+    skills:['TRIM','CLEAN','SUBSTITUTE'],
+    story:'同事发来的表格里，<strong>姓名列有很多多余空格</strong>——有的前面有空格、有的后面有空格、有的中间多个空格。导致 VLOOKUP 匹配失败。',
+    table:{ h:['原始数据','问题'], rows:[
+      ['"  张三"','前面有空格'],['"李四  "','后面有空格'],
+      ['"王  五"','中间两个空格'],['" 赵  六  "','前后+中间都有空格']
+    ]},
+    q:'一次性清除所有多余空格应该用哪个函数？',
+    opts:[
+      '=SUBSTITUTE(A1," ","")',
+      '=TRIM(A1)',
+      '=CLEAN(A1)',
+      '手动逐个删除空格'
+    ],
+    ans:1,
+    explain:'<strong>=TRIM(A1)</strong> 专治多余空格：删除首尾所有空格，中间多个空格压缩为1个。<br><br>三兄弟的分工：<br>• <strong>TRIM</strong> — 清多余空格（首尾+中间多余的）<br>• <strong>CLEAN</strong> — 清不可见字符（换行符、制表符等）<br>• <strong>SUBSTITUTE</strong> — 替换指定字符（如去掉所有空格用 =SUBSTITUTE(A1," ","")）',
+    related:['s2','s11']
+  },
+  {
+    id:'s7', title:'条件格式预警', cat:'数据处理',
+    skills:['条件格式','数据条','色阶'],
+    story:'老板给了你一份 <strong>各区域季度业绩表</strong>，让你"一眼就能看出哪些区域没达标"。达标线是 <strong>100,000</strong>。',
+    table:{ h:['区域','Q1','Q2','目标'], rows:[
+      ['华东','120,000','135,000','100,000'],['华南','95,000','88,000','100,000'],
+      ['华北','110,000','105,000','100,000'],['西部','72,000','68,000','100,000'],
+      ['华中','98,000','102,000','100,000']
+    ]},
+    q:'最优的做法是什么？',
+    opts:[
+      '手动用眼睛扫，把不达标的记下来',
+      '选中数据 → 开始 → 条件格式 → 突出显示 → 小于 100000，设红色',
+      '给每个单元格写备注',
+      '删除不达标的数据，只留达标的'
+    ],
+    ans:1,
+    explain:'<strong>条件格式</strong>让数据自动"说话"。步骤：① 选中数据区域 → ② <strong>开始 → 条件格式 → 突出显示单元格规则 → 小于</strong> → ③ 输入 100000，选择"浅红填充色深红色文本" → ④ 确定。不达标的格子瞬间标红！<br><br>进阶：还可以用<strong>数据条、色阶、图标集</strong>让数据可视化更直观。',
+    related:['s9','s1']
+  },
+  {
+    id:'s8', title:'PPT统一风格', cat:'演示设计',
+    skills:['幻灯片母版','版式','对齐'],
+    story:'你做了 <strong>30 页的汇报 PPT</strong>，老板说"每页都要加公司 Logo 和统一页脚"。你现在一页一页加效率太低。',
+    table:{ h:['需求','传统做法','正确做法'], rows:[
+      ['每页左上角加 Logo','复制粘贴30次','母版加一次'],
+      ['统一标题字体','逐页改字体','母版设一次'],
+      ['统一页脚信息','逐页打字','母版加一次'],
+      ['新增内容页保持统一','每次手动调','应用版式即可']
+    ]},
+    q:'一次性统一所有页面应该用什么功能？',
+    opts:[
+      '把第一页做好，复制粘贴29次',
+      '视图 → 幻灯片母版，在母版上修改',
+      '一页一页改，加班做完',
+      '把PPT导出为图片重新排版'
+    ],
+    ans:1,
+    explain:'<strong>幻灯片母版</strong>是 PPT 最高效的功能之一。步骤：① <strong>视图 → 幻灯片母版</strong> → ② 在母版上添加 Logo、调整字体、设置页脚 → ③ 关闭母版视图 → 所有页面自动应用！<br><br>母版改一次，全 PPT 同步更新。30页和300页的操作时间一样。专业 PPT 制作者的必备技能。',
+    related:['s4','s3']
+  },
+  {
+    id:'s9', title:'限制表格输入内容', cat:'数据处理',
+    skills:['数据验证','下拉列表'],
+    story:'你做了一张<strong>报销申请表</strong>要给全公司同事填写。但担心有人乱填——比如在"金额"列填文字、在"部门"列乱写。你想让"部门"列只能从下拉列表选择，"金额"列只能填 0~5000 的数字。',
+    table:{ h:['姓名','部门','金额','日期'], rows:[
+      ['(待填)','?(只能选)','?(0~5000)','(待填)'],
+      ['(待填)','?(只能选)','?(0~5000)','(待填)']
+    ]},
+    q:'应该使用什么功能来限制输入？',
+    opts:[
+      '在旁边写警告文字提醒同事',
+      '数据 → 数据验证 → 设置允许条件',
+      '事后一个个检查修改',
+      '把表格锁起来不让人填'
+    ],
+    ans:1,
+    explain:'<strong>数据验证</strong>（也叫数据有效性）能在输入时就拦住错误。步骤：<br>• <strong>下拉列表</strong>：选中"部门"列 → 数据 → 数据验证 → 允许"序列" → 输入"技术部,市场部,财务部" → 单元格出现下拉箭头<br>• <strong>数字范围</strong>：选中"金额"列 → 数据验证 → 允许"小数" → 介于0~5000 → 超出范围自动拦截<br>提前设好规则，让别人想填错都难！',
+    related:['s7','s10']
+  },
+  {
+    id:'s10', title:'保护工作表', cat:'数据处理',
+    skills:['保护工作表','锁定单元格','审阅'],
+    story:'承上题，报销表做好了。但你只希望同事<strong>填写姓名、部门、金额，不能修改表头和公式</strong>。你需要保护工作表结构不被破坏。',
+    table:{ h:['姓名','部门','金额','(隐藏公式列)'], rows:[
+      ['可填','可填','可填','=自动计算'],
+      ['可填','可填','可填','=自动计算']
+    ]},
+    q:'正确保护表格的做法是？',
+    opts:[
+      '把文件设成只读，谁都不能改',
+      '先把可填区域取消锁定 → 审阅 → 保护工作表 → 设密码',
+      '在表头写上"请勿修改"',
+      '把Excel文件加密不让打开'
+    ],
+    ans:1,
+    explain:'<strong>保护工作表</strong>配合<strong>单元格锁定</strong>精确控制权限。步骤：<br>① 选中允许填写的区域 → 右键 → 设置单元格格式 → 保护 → <strong>取消"锁定"</strong>勾选<br>② <strong>审阅 → 保护工作表</strong> → 设置密码 → 确定<br>③ 结果：表头和公式区域被锁定，只有你指定的区域可以编辑。<br>关键时刻能防止你的心血被误操作毁掉！',
+    related:['s9','s3']
+  },
+  {
+    id:'s11', title:'VLOOKUP关联两张表', cat:'数据处理',
+    skills:['VLOOKUP','XLOOKUP','INDEX','MATCH'],
+    story:'你有两张表：<strong>员工表</strong>（工号+姓名）和<strong>工资表</strong>（工号+工资）。你需要把工资表中的工资按工号匹配到员工表里。',
+    table:{ h:['表1: 员工表','','表2: 工资表',''], rows:[
+      ['工号','姓名','工号','工资'],
+      ['E001','张三','E003','12000'],
+      ['E002','李四','E001','15000'],
+      ['E003','王五','E004','10000'],
+      ['E004','赵六','E002','13500']
+    ]},
+    q:'在表1的C列填入对应工资，应该用什么函数？',
+    opts:[
+      '=SUMIF(工资表!A:A,表1!A2,工资表!B:B)',
+      '=VLOOKUP(A2,工资表!A:B,2,FALSE)',
+      '=IF(A2="E001","15000","不知道")',
+      '把两个表打印出来手动对照'
+    ],
+    ans:1,
+    explain:'<strong>=VLOOKUP(A2, 工资表!A:B, 2, FALSE)</strong><br>翻译：在工资表的A:B列中，查找A2（工号），返回第2列（工资），FALSE=精确匹配。<br><br>VLOOKUP 四个参数记忆口诀：<strong>"找什么, 在哪找, 返回第几列, 精确还是模糊"</strong><br><br>进阶推荐 <strong>XLOOKUP</strong>：=XLOOKUP(A2,工资表!A:A,工资表!B:B)，更简洁，不受列位置限制，可向左查找。',
+    related:['s1','s5','s6']
+  },
+  {
+    id:'s12', title:'冻结窗格看大表', cat:'数据处理',
+    skills:['冻结窗格','拆分窗口','视图'],
+    story:'你有一张 <strong>200 行的项目进度表</strong>。往下滚动查看后面的数据时，<strong>表头看不到了</strong>，经常搞混这是哪一列。',
+    table:{ h:['序号','项目名','负责人','状态','截止日'], rows:[
+      ['1','官网改版','张三','进行中','6/1'],
+      ['...','...','...','...','...'],
+      ['199','数据库迁移','王五','未开始','8/15'],
+      ['200','年报制作','赵六','进行中','6/30']
+    ]},
+    q:'向下滚动时让表头始终可见，应该怎么做？',
+    opts:[
+      '把表头抄在便利贴上贴在屏幕上',
+      '选中表头下一行 → 视图 → 冻结窗格',
+      '把表头字体设成超大号',
+      '分成多个小表，每页重复表头'
+    ],
+    ans:1,
+    explain:'<strong>冻结窗格</strong>让表头"钉"在屏幕上。步骤：① 点击表头<strong>下面那一行</strong>的任意单元格（如A2）→ ② <strong>视图 → 冻结窗格 → 冻结窗格</strong>。表头就锁住了！<br><br>• 冻结首行：视图 → 冻结窗格 → 冻结首行（快捷）<br>• 冻结首列：视图 → 冻结窗格 → 冻结首列<br>• 冻结多行多列：点击要冻结区域交叉的右下角单元格，再点冻结窗格<br><br>浏览大数据表必备技能。',
+    related:['s7','s1']
+  },
+  {
+    id:'s13', title:'制作季度趋势图', cat:'报表制作',
+    skills:['图表','组合图','趋势线'],
+    story:'你有<strong>四个季度的销售额和利润数据</strong>，老板让你"做个图，趋势一目了然"。你需要同时展示销售额（柱形图）和利润率（折线图）的变化趋势。',
+    table:{ h:['季度','销售额','利润','利润率'], rows:[
+      ['Q1','120万','24万','20%'],['Q2','150万','33万','22%'],
+      ['Q3','110万','16.5万','15%'],['Q4','180万','45万','25%']
+    ]},
+    q:'同时展示销售额和利润率趋势的最佳图表是什么？',
+    opts:[
+      '两个独立的柱形图',
+      '组合图：销售额用柱形图，利润率用折线图（次坐标轴）',
+      '饼图分四个季度',
+      '纯文字表格说明'
+    ],
+    ans:1,
+    explain:'<strong>组合图</strong>可以同时展示不同量级的数据。步骤：① 选中数据 → ② <strong>插入 → 图表 → 组合图</strong> → ③ 销售额选"簇状柱形图"，利润率选"带数据标记的折线图" → ④ 利润率勾选<strong>"次坐标轴"</strong>（因为%和万元单位不同）→ ⑤ 完成。<br><br>柱形图看规模，折线图看趋势，一个图讲清两个维度。',
+    related:['s7','s1']
+  },
+  {
+    id:'s14', title:'多条件求和统计', cat:'数据处理',
+    skills:['SUMIFS','COUNTIFS','AVERAGEIFS'],
+    story:'你拿到一份<strong>全国各门店销售明细</strong>，老板问："上海地区，产品A的销售额是多少？"你需要<strong>同时满足两个条件</strong>来求和。',
+    table:{ h:['日期','城市','产品','销售额'], rows:[
+      ['5/1','上海','产品A','5,000'],['5/1','上海','产品B','3,000'],
+      ['5/2','北京','产品A','2,000'],['5/2','上海','产品A','4,500'],
+      ['5/3','北京','产品B','6,000'],['5/3','上海','产品A','7,200']
+    ]},
+    q:'统计"上海+产品A"的总销售额，正确公式是？',
+    opts:[
+      '=SUMIF(B:B,"上海",D:D)',
+      '=SUMIFS(D:D, B:B,"上海", C:C,"产品A")',
+      '=COUNTIF(B:B,"上海")',
+      '=SUMIF(B:B,"上海",C:C,"产品A",D:D)'
+    ],
+    ans:1,
+    explain:'<strong>=SUMIFS(求和区域, 条件区域1, 条件1, 条件区域2, 条件2)</strong><br>翻译：对D列求和，要求B列="上海"且C列="产品A"。<br><br>IFS家族对比：<br>• <strong>SUMIF</strong> — 单条件求和<br>• <strong>SUMIFS</strong> — 多条件求和（注意：求和区域在最前面！）<br>• <strong>COUNTIFS</strong> — 多条件计数<br>• <strong>AVERAGEIFS</strong> — 多条件求平均<br>所有 IFS 函数都支持无限多个条件。',
+    related:['s1','s7']
+  },
+  {
+    id:'s15', title:'删除重复项', cat:'数据处理',
+    skills:['删除重复项','高级筛选','UNIQUE'],
+    story:'你从系统导出了一份<strong>客户名单</strong>，但有好多重复的——同一个客户因为多次购买出现了多次。你需要在发邮件前去掉重复记录。',
+    table:{ h:['客户名','电话','地址'], rows:[
+      ['张三','13800138000','北京'],['李四','13912345678','上海'],
+      ['张三','13800138000','北京'],['王五','13798765432','广州'],
+      ['李四','13912345678','上海']
+    ]},
+    q:'快速去掉重复行的正确做法？',
+    opts:[
+      '逐行查看，发现重复就删一行',
+      '数据 → 删除重复项 → 选择判断重复的列',
+      '按客户名排序后手动识别',
+      '筛选出重复的，导出到新表'
+    ],
+    ans:1,
+    explain:'<strong>删除重复项</strong>一键去重。步骤：① 选中数据区域 → ② <strong>数据 → 删除重复项</strong> → ③ 勾选用于判断重复的列（如"客户名"）→ ④ 确定。保留第一次出现，删除后续重复。<br><br>进阶：<br>• <strong>高级筛选 → 选择不重复的记录</strong>，可把去重结果复制到新位置<br>• <strong>=UNIQUE(A2:C100)</strong>（WPS新版支持）动态去重，源数据变化结果自动更新',
+    related:['s1','s7']
+  },
+];
+
 // ==================== 游戏状态 ====================
 let state = {
-  game: null,           // 'shortcut'|'quiz'|'speed'|'match'
+  game: null,           // 'shortcut'|'quiz'|'speed'|'match'|'scenario'
   score: 0,
   combo: 0,
   maxCombo: 0,
@@ -456,12 +814,18 @@ let state = {
   matchCards: [],
   matchSelected: null,
   matchFound: 0,
+
+  // 场景实战专用
+  scenarioPool: [],
+  scenarioIdx: 0,
+  scenarioFilter: '全部',
+  scenarioCompleted: [],
 };
 
 // ==================== 数据持久化 ====================
 function loadProgress() {
   try {
-    return JSON.parse(localStorage.getItem('wps_trainer')) || { xp:0, level:1, streak:0, badges:[] };
+    return JSON.parse(localStorage.getItem('wps_trainer')) || { xp:0, level:1, streak:0, badges:[], scenarioDone:[] };
   } catch { return { xp:0, level:1, streak:0, badges:[] }; }
 }
 function saveProgress(p) { localStorage.setItem('wps_trainer', JSON.stringify(p)); }
@@ -515,6 +879,7 @@ const ALL_BADGES = [
   { id:'quiz_ace', name:'知识达人', desc:'闯关模式答对30题', emoji:'🧠' },
   { id:'speed_demon', name:'极速挑战者', desc:'限时冲刺单局超过15题', emoji:'⚡' },
   { id:'match_king', name:'连连看冠军', desc:'连连看模式完成3局', emoji:'🧩' },
+  { id:'scenario10', name:'场景实战家', desc:'完成10个场景挑战', emoji:'🏢' },
 ];
 
 function checkBadges() {
@@ -635,6 +1000,12 @@ function startGame(type) {
   } else if (type === 'match') {
     showGame('🧩 函数连连看');
     renderMatchGame();
+  } else if (type === 'scenario') {
+    state.scenarioFilter = '全部';
+    state.scenarioCompleted = progress.scenarioDone || [];
+    applyScenarioFilter();
+    showGame('🏢 场景实战');
+    renderScenarioGame();
   }
   updateStatsUI();
 }
@@ -965,6 +1336,151 @@ function answerSpeed(choice) {
     state.questionIdx++;
     renderSpeedGame();
   }, 500);
+}
+
+// ==================== 场景实战 ====================
+function applyScenarioFilter() {
+  if (state.scenarioFilter === '全部') {
+    state.scenarioPool = shuffle([...SCENARIO_BANK]);
+  } else {
+    state.scenarioPool = shuffle(SCENARIO_BANK.filter(s => s.cat === state.scenarioFilter));
+  }
+  state.scenarioIdx = 0;
+}
+
+function renderScenarioGame() {
+  if (state.scenarioPool.length === 0) {
+    document.getElementById('game-content').innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--text-dim);">该分类下暂无场景</div>';
+    return;
+  }
+  if (state.scenarioIdx >= state.scenarioPool.length) {
+    state.scenarioIdx = 0;
+    state.scenarioPool = shuffle([...state.scenarioPool]);
+  }
+
+  const s = state.scenarioPool[state.scenarioIdx];
+  state.answered = false;
+  state.totalCount = 1;
+
+  const doneCount = state.scenarioCompleted.length;
+  const doneSet = new Set(state.scenarioCompleted);
+  const isDone = doneSet.has(s.id);
+
+  const content = document.getElementById('game-content');
+  content.innerHTML = `
+    <div class="cat-tabs">
+      ${['全部','数据处理','文档排版','演示设计','报表制作'].map(c => `
+        <span class="cat-tab${state.scenarioFilter===c?' active':''}" onclick="setScenarioFilter('${c}')">${c==='全部'?'🔖 全部':c==='数据处理'?'📊 数据处理':c==='文档排版'?'📄 文档排版':c==='演示设计'?'🎨 演示设计':'📈 报表制作'}</span>
+      `).join('')}
+    </div>
+    <div class="scenario-progress">
+      已完成 ${doneCount} / ${SCENARIO_BANK.length} 个场景 |
+      当前：${state.scenarioIdx+1} / ${state.scenarioPool.length}
+      ${isDone ? ' <span style="color:var(--success);">✅ 已完成</span>' : ''}
+    </div>
+    <div class="scenario-card">
+      <div style="margin-bottom:8px;">
+        ${s.skills.map(sk => `<span class="skill-tag" onclick="filterBySkill('${sk}')" title="点击查看该技能相关场景">🔧 ${sk}</span>`).join(' ')}
+      </div>
+      <div class="story">${s.story}</div>
+      ${s.table ? `
+      <table class="mini-table">
+        <thead><tr>${s.table.h.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${s.table.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>` : ''}
+      <div class="q-prompt" style="font-weight:bold;margin-top:12px;">❓ ${s.q}</div>
+    </div>
+    <div class="options-grid">
+      ${s.opts.map((opt, i) => `
+        <button class="option-btn" onclick="answerScenario(${i})">${String.fromCharCode(65+i)}. ${opt}</button>
+      `).join('')}
+    </div>
+    <div id="scenario-feedback"></div>
+  `;
+}
+
+function setScenarioFilter(cat) {
+  state.scenarioFilter = cat;
+  applyScenarioFilter();
+  renderScenarioGame();
+}
+
+function filterBySkill(skill) {
+  state.scenarioPool = shuffle(SCENARIO_BANK.filter(s => s.skills.includes(skill)));
+  state.scenarioIdx = 0;
+  state.scenarioFilter = '🔧 ' + skill;
+  renderScenarioGame();
+}
+
+function jumpToScenario(id) {
+  const s = SCENARIO_BANK.find(x => x.id === id);
+  if (!s) return;
+  state.scenarioPool = [s];
+  state.scenarioIdx = 0;
+  state.scenarioFilter = s.cat;
+  renderScenarioGame();
+  document.getElementById('game-area').scrollIntoView({ behavior: 'smooth' });
+}
+
+function answerScenario(choice) {
+  if (state.answered) return;
+  state.answered = true;
+  const s = state.scenarioPool[state.scenarioIdx];
+  const correct = choice === s.ans;
+  const btns = document.querySelectorAll('.option-btn');
+
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === s.ans) btn.classList.add('correct');
+    else if (i === choice) btn.classList.add('wrong');
+  });
+
+  if (correct) {
+    state.correctCount++;
+    state.score += 20 + state.combo * 5;
+    addStreak();
+    if (!state.scenarioCompleted.includes(s.id)) {
+      state.scenarioCompleted.push(s.id);
+      progress.scenarioDone = state.scenarioCompleted;
+      saveProgress(progress);
+    }
+    if (state.scenarioCompleted.length >= 10) earnBadge('scenario10');
+    updateStatsUI();
+  } else {
+    resetStreak();
+  }
+
+  const fb = document.getElementById('scenario-feedback');
+  fb.innerHTML = `
+    <div class="explanation-box">
+      ${correct ? '<strong>✅ 回答正确！</strong>' : '<strong>❌ 回答错误</strong>'}
+      <div style="margin-top:10px;">${s.explain}</div>
+      ${s.related && s.related.length > 0 ? `
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+        <span style="color:var(--text-dim);">🔗 关联场景：</span>
+        ${s.related.map(rid => {
+          const rs = SCENARIO_BANK.find(x => x.id === rid);
+          return rs ? `<span class="related-link" onclick="jumpToScenario('${rid}')">${rs.title}</span>` : '';
+        }).join('')}
+      </div>` : ''}
+    </div>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn" onclick="nextScenario()">下一个场景 →</button>
+    </div>
+  `;
+  fb.scrollIntoView({ behavior: 'smooth' });
+}
+
+function nextScenario() {
+  if (state.game !== 'scenario') return;
+  state.scenarioIdx++;
+  if (state.scenarioIdx >= state.scenarioPool.length && state.scenarioFilter.startsWith('🔧')) {
+    state.scenarioFilter = '全部';
+    applyScenarioFilter();
+  }
+  renderScenarioGame();
+  document.getElementById('game-area').scrollIntoView({ behavior: 'smooth' });
 }
 
 // ==================== 函数连连看 ====================
