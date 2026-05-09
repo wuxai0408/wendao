@@ -306,6 +306,19 @@
   .scenario-progress {
     text-align: center; color: var(--text-dim); font-size: 0.85em; margin-top: 10px;
   }
+
+  /* Sandbox Table */
+  .sandbox-table { width: 100%; border-collapse: collapse; font-size: 0.82em; font-family: "Consolas","Microsoft YaHei",monospace; }
+  .sandbox-table th { background: #2d2d5a; color: var(--primary-glow); padding: 6px 8px; border: 1px solid var(--border); text-align: center; font-weight: bold; white-space: nowrap; }
+  .sandbox-table th small { font-weight: normal; color: var(--text-dim); font-size: 0.7em; display: block; margin-top: 2px; }
+  .sandbox-table td {
+    padding: 5px 8px; border: 1px solid var(--border); min-width: 80px;
+    background: rgba(255,255,255,0.02); outline: none;
+    transition: background 0.15s;
+  }
+  .sandbox-table td:hover { background: rgba(108,92,231,0.08); }
+  #sandbox-body td[contenteditable] { cursor: text; }
+  #sandbox-body td[contenteditable]:focus { background: rgba(108,92,231,0.15); }
 </style>
 </head>
 <body>
@@ -1338,6 +1351,333 @@ function answerSpeed(choice) {
   }, 500);
 }
 
+// ==================== 练习文件下载 ====================
+function downloadCSV(headers, rows, filename) {
+  let csv = '﻿' + headers.join(',') + '\n';
+  rows.forEach(r => { csv += r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',') + '\n'; });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  showPopup('📥 下载完成！用 WPS 打开即可练习');
+}
+
+function downloadText(content, filename) {
+  const blob = new Blob(['﻿' + content], { type: 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  showPopup('📥 ' + filename + ' 下载完成！');
+}
+
+// ==================== 在线沙箱 ====================
+function renderSandbox(scenarioId) {
+  const s = SCENARIO_BANK.find(x => x.id === scenarioId);
+  if (!s || !s.table) return;
+  const h = s.table.h;
+  const rows = s.table.rows;
+  const cols = Math.min(h.length, 6);
+  const maxRows = Math.min(rows.length + 2, 15); // extra rows for practice
+
+  const content = document.getElementById('game-content');
+  content.innerHTML = `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+      <strong>🎯 在线沙箱练习：${s.title}</strong>
+      <span style="color:var(--text-dim);font-size:0.82em;margin-left:12px;">在单元格中直接输入公式（如 =SUM(A2:A5)）</span>
+      <button class="btn ghost" style="float:right;font-size:0.75em;padding:4px 14px;" onclick="resetSandboxCells()">重置数据</button>
+    </div>
+    <div class="sandbox-grid-wrap" style="overflow-x:auto;">
+      <table class="sandbox-table" id="sandbox-table">
+        <thead>
+          <tr><th></th>${h.map((hh,i) => `<th>${String.fromCharCode(65+i)}<br><small>${hh}</small></th>`).join('')}</tr>
+        </thead>
+        <tbody id="sandbox-body"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <span style="color:var(--text-dim);font-size:0.85em;">公式测试：</span>
+      <input id="formula-input" placeholder="输入公式，如 =SUM(A2:A5)" style="flex:1;min-width:200px;background:#0a0a18;color:var(--primary-glow);border:1px solid var(--border);padding:8px 14px;border-radius:8px;font-family:Consolas,monospace;font-size:0.9em;"
+        onkeydown="if(event.key==='Enter')evalSandboxFormula()">
+      <button class="btn" onclick="evalSandboxFormula()" style="padding:8px 18px;font-size:0.85em;">计算</button>
+      <span id="formula-result" style="color:var(--success);font-weight:bold;font-size:1.1em;min-width:60px;"></span>
+    </div>
+    <div style="margin-top:8px;color:var(--text-dim);font-size:0.75em;">
+      支持：+ - * / 运算 | SUM() AVERAGE() MAX() MIN() COUNT() | LEFT() RIGHT() MID() TRIM() LEN() | 单元格引用 A1, B2 | 范围 A2:A5
+    </div>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn ghost" onclick="renderScenarioGame()">← 返回场景</button>
+    </div>
+  `;
+
+  const tbody = document.getElementById('sandbox-body');
+  for (let r = 0; r < maxRows; r++) {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.textContent = r + 1;
+    th.style.cssText = 'background:#1a1a3e;color:var(--text-dim);text-align:center;width:30px;';
+    tr.appendChild(th);
+    for (let c = 0; c < cols; c++) {
+      const td = document.createElement('td');
+      td.contentEditable = 'true';
+      td.dataset.row = r;
+      td.dataset.col = c;
+      if (r < rows.length && c < h.length) {
+        td.textContent = rows[r][c] || '';
+        td.dataset.original = rows[r][c] || '';
+      }
+      td.addEventListener('focus', () => { td.style.outline = '2px solid var(--primary)'; });
+      td.addEventListener('blur', () => { td.style.outline = ''; });
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+function resetSandboxCells() {
+  document.querySelectorAll('#sandbox-body td[contenteditable]').forEach(td => {
+    if (td.dataset.original !== undefined) td.textContent = td.dataset.original;
+  });
+  document.getElementById('formula-result').textContent = '';
+  document.getElementById('formula-input').value = '';
+}
+
+function getSandboxCell(colLetter, rowNum) {
+  const colIdx = colLetter.toUpperCase().charCodeAt(0) - 65;
+  const td = document.querySelector(`#sandbox-body td[data-row="${rowNum - 1}"][data-col="${colIdx}"]`);
+  return td ? td.textContent.trim() : '';
+}
+
+function getSandboxRange(rangeStr, gridData) {
+  const [start, end] = rangeStr.split(':');
+  if (!end) return [parseFloat(getSandboxCell(start[0], parseInt(start.slice(1)))) || 0];
+  const sc = start[0].toUpperCase().charCodeAt(0) - 65;
+  const sr = parseInt(start.slice(1));
+  const ec = end[0].toUpperCase().charCodeAt(0) - 65;
+  const er = parseInt(end.slice(1));
+  const values = [];
+  for (let r = sr; r <= er; r++) {
+    for (let c = sc; c <= ec; c++) {
+      const td = document.querySelector(`#sandbox-body td[data-row="${r - 1}"][data-col="${c}"]`);
+      const v = td ? parseFloat(td.textContent.trim()) : NaN;
+      if (!isNaN(v)) values.push(v);
+    }
+  }
+  return values;
+}
+
+function evalSandboxFormula() {
+  const input = document.getElementById('formula-input').value.trim();
+  const resultEl = document.getElementById('formula-result');
+  if (!input) { resultEl.textContent = ''; return; }
+
+  let expr = input.startsWith('=') ? input.slice(1) : input;
+
+  // Replace function calls
+  expr = expr.replace(/SUM\s*\(([^)]+)\)/gi, (_, range) =>
+    getSandboxRange(range).reduce((a, b) => a + b, 0));
+  expr = expr.replace(/AVERAGE\s*\(([^)]+)\)/gi, (_, range) => {
+    const vals = getSandboxRange(range);
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+  });
+  expr = expr.replace(/MAX\s*\(([^)]+)\)/gi, (_, range) => {
+    const vals = getSandboxRange(range);
+    return vals.length ? Math.max(...vals) : 0;
+  });
+  expr = expr.replace(/MIN\s*\(([^)]+)\)/gi, (_, range) => {
+    const vals = getSandboxRange(range);
+    return vals.length ? Math.min(...vals) : 0;
+  });
+  expr = expr.replace(/COUNT\s*\(([^)]+)\)/gi, (_, range) =>
+    getSandboxRange(range).length);
+  expr = expr.replace(/TRIM\s*\(\s*"([^"]*)"\s*\)/gi, (_, s) => '"' + s.replace(/\s+/g, ' ').trim() + '"');
+  expr = expr.replace(/LEFT\s*\(\s*"([^"]*)",\s*(\d+)\s*\)/gi, (_, s, n) => '"' + s.slice(0, parseInt(n)) + '"');
+  expr = expr.replace(/RIGHT\s*\(\s*"([^"]*)",\s*(\d+)\s*\)/gi, (_, s, n) => '"' + s.slice(-parseInt(n)) + '"');
+  expr = expr.replace(/MID\s*\(\s*"([^"]*)",\s*(\d+)\s*,\s*(\d+)\s*\)/gi, (_, s, start, n) =>
+    '"' + s.slice(parseInt(start) - 1, parseInt(start) - 1 + parseInt(n)) + '"');
+  expr = expr.replace(/LEN\s*\(\s*"([^"]*)"\s*\)/gi, (_, s) => s.length);
+
+  // Replace cell references (last, to avoid matching inside functions)
+  expr = expr.replace(/([A-Z])(\d+)/gi, (_, col, row) => {
+    const v = getSandboxCell(col, parseInt(row));
+    return (v && !isNaN(parseFloat(v))) ? parseFloat(v) : (v ? '"' + v + '"' : '0');
+  });
+
+  try {
+    const result = Function('"use strict"; return (' + (expr || '0') + ')')();
+    resultEl.textContent = '= ' + (typeof result === 'number' ? result.toFixed(2).replace(/\.?0+$/, '') : result);
+    resultEl.style.color = 'var(--success)';
+  } catch (e) {
+    resultEl.textContent = '#ERROR';
+    resultEl.style.color = 'var(--danger)';
+  }
+}
+
+// ==================== 场景实践指南 ====================
+const PRACTICE_GUIDES = {
+  s1: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件',
+      '选中全部数据区域 → 插入 → 数据透视表',
+      '将"销售员"拖到行标签区域',
+      '将"金额(元)"拖到值区域',
+      '观察：每个销售员的总销售额马上出来了',
+      '进阶：也试试 =SUMIF(B:B,"张三",D:D) 对比效果'
+    ],
+    apps:['月度/季度销售汇报','各部门费用统计','学生成绩按班级汇总','库存按品类统计']
+  },
+  s2: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件',
+      '选中 A 列 → 数据 → 分列',
+      '选择"按分隔符号" → 下一步',
+      '勾选"其他"，输入 "-" → 完成',
+      '一瞬间拆成两列！',
+      '进阶：试试 =LEFT(A1,FIND("-",A1)-1) 提取姓名'
+    ],
+    apps:['客户名单清洗','身份证号拆分','地址拆分省市区','产品编码解析']
+  },
+  s3: {
+    steps:[
+      '打开提供的合同模板（TXT）→ 复制到 WPS 文字',
+      '准备 Excel 数据源（下载 CSV）',
+      'Word 中：邮件 → 选择收件人 → 使用现有列表 → 选 CSV',
+      '在模板中光标定位 → 插入合并域（客户名、金额、日期）',
+      '完成并合并 → 编辑单个文档 → 100份瞬间生成！'
+    ],
+    apps:['批量制作合同/协议','工资条生成','邀请函/证书批量制作','工牌/名片批量打印']
+  },
+  s4: {
+    steps:[
+      '打开提供的论文草稿 TXT → 复制到 WPS 文字',
+      '选中"第一章 xxx"→ 应用"标题1"样式',
+      '选中"1.1 xxx"→ 应用"标题2"样式（以此类推所有标题）',
+      '光标放到目录页 → 引用 → 目录 → 自动目录',
+      '布局 → 分隔符 → 下一页分节符（在封面/目录/正文之间）',
+      '双击页眉 → 取消"链接到前一节"→ 各节独立设置'
+    ],
+    apps:['毕业论文排版','标书/报告排版','产品手册编排','规章制度文档']
+  },
+  s5: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件',
+      '在 C2 输入公式：=MID(B2,7,8)',
+      '下拉填充到所有行 → 提取出 YYYYMMDD 格式',
+      '美化：=TEXT(MID(B2,7,8),"0000-00-00")',
+      '进阶：=DATE(MID(B2,7,4),MID(B2,11,2),MID(B2,13,2)) 得到真日期'
+    ],
+    apps:['HR 员工信息管理','会员信息处理','学生档案整理','数据脱敏处理']
+  },
+  s6: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件',
+      '在 B2 输入 =TRIM(A2) → 下拉填充',
+      '对比 A 列和 B 列 → 多余空格全部清除',
+      '试试：=CLEAN(A2) 清理不可见字符',
+      '试试：=SUBSTITUTE(A2," ","") 去掉所有空格（包括中间）'
+    ],
+    apps:['导入外部数据后清理','VLOOKUP 匹配前的数据清洗','客户名单标准化','财务报表数据整理']
+  },
+  s7: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件',
+      '选中数值区域 → 开始 → 条件格式 → 突出显示',
+      '选择"小于"→ 输入 100000 → 选红色填充',
+      '立刻看到哪些区域没达标',
+      '进阶：试试数据条、色阶、图标集的不同效果'
+    ],
+    apps:['业绩达标监控','预算超支预警','学生成绩分级','库存低量提醒']
+  },
+  s8: {
+    steps:[
+      '打开 WPS 演示 → 新建空白演示',
+      '视图 → 幻灯片母版 → 在母版左上角插入 Logo 图片',
+      '在母版底部添加页脚文字（公司名/日期）',
+      '调整母版标题字体、大小、颜色',
+      '关闭母版视图 → 所有新页面自动带 Logo 和页脚！'
+    ],
+    apps:['公司汇报 PPT 统一风格','教学课件模板','产品发布会演示','路演材料统一品牌形象']
+  },
+  s9: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 模板文件',
+      '选中"部门"列 → 数据 → 数据验证 → 允许"序列"',
+      '来源输入：技术部,市场部,财务部,人事部',
+      '选中"金额"列 → 数据验证 → 允许"小数" → 介于 0~5000',
+      '设置"输入信息"提示：请输入0~5000的数字',
+      '测试：输入不合法内容会被拦截'
+    ],
+    apps:['报销单/申请表模板','数据录入表单','问卷收集表','库存出入库记录']
+  },
+  s10: {
+    steps:[
+      '接上一场景的文件 → 全选工作表 Ctrl+A',
+      '右键 → 设置单元格格式 → 保护 → 取消所有"锁定"',
+      '再选中表头和公式区域 → 右键 → 保护 → 勾选"锁定"',
+      '审阅 → 保护工作表 → 设密码 → 确定',
+      '现在只有指定区域可以编辑，表头/公式无法修改'
+    ],
+    apps:['共享工作簿保护','模板分发给多人填写','敏感数据区域锁定','报表提交模板']
+  },
+  s11: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件（含两个表）',
+      '在员工表的 C2 输入：=VLOOKUP(A2, 工资表!A:B, 2, FALSE)',
+      '下拉填充 → 工资自动匹配到每个员工',
+      '口诀：找什么, 在哪找, 返回第几列, 精确匹配',
+      '进阶：=XLOOKUP(A2, 工资表!A:A, 工资表!B:B) 更简洁'
+    ],
+    apps:['薪资匹配','库存与价格关联','学生信息与成绩合并','订单与物流信息关联']
+  },
+  s12: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件',
+      '点击 A2 单元格（表头下面第一行）',
+      '视图 → 冻结窗格 → 冻结窗格',
+      '向下滚动 → 表头始终可见！',
+      '试试：冻结首行（快捷）、冻结首列、冻结多行多列的不同效果'
+    ],
+    apps:['浏览长表格数据','对比多列数据时锁定关键列','项目进度表翻阅','财务报表查阅']
+  },
+  s13: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件',
+      '选中全部数据 → 插入 → 图表 → 组合图',
+      '销售额选"簇状柱形图"，利润率选"带数据标记的折线图"',
+      '利润率勾选"次坐标轴"（因为%和万元单位不同）',
+      '添加图表标题、数据标签 → 完成！'
+    ],
+    apps:['季度/年度汇报图表','销售趋势分析','预算 vs 实际对比','多维度数据可视化']
+  },
+  s14: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件',
+      '在空白单元格输入：=SUMIFS(D:D, B:B,"上海", C:C,"产品A")',
+      '立即得到上海+产品A的总销售额',
+      '试试改条件：换成"北京"+"产品B"',
+      '进阶：=COUNTIFS 统计满足多条件的记录数'
+    ],
+    apps:['多维度销售分析','特定地区+品类统计','满足多条件的订单汇总','人力资源多条件筛选']
+  },
+  s15: {
+    steps:[
+      '在 WPS 中打开下载的 CSV 文件',
+      '选中数据区域 → 数据 → 删除重复项',
+      '勾选用于判断重复的列（如"客户名"）→ 确定',
+      '重复行被删除，保留第一次出现的记录',
+      '进阶：高级筛选 → 选择不重复的记录 → 复制到新位置'
+    ],
+    apps:['客户名单去重','订单号去重','员工名单清理','合并多个来源数据后去重']
+  },
+};
+
+function downloadScenarioCSV(id) {
+  const s = SCENARIO_BANK.find(x => x.id === id);
+  if (!s || !s.table) return;
+  downloadCSV(s.table.h, s.table.rows, s.title + '.csv');
+}
+
 // ==================== 场景实战 ====================
 function applyScenarioFilter() {
   if (state.scenarioFilter === '全部') {
@@ -1452,10 +1792,37 @@ function answerScenario(choice) {
   }
 
   const fb = document.getElementById('scenario-feedback');
+  const guide = PRACTICE_GUIDES[s.id];
+  const practiceData = s.table;
+
   fb.innerHTML = `
     <div class="explanation-box">
       ${correct ? '<strong>✅ 回答正确！</strong>' : '<strong>❌ 回答错误</strong>'}
       <div style="margin-top:10px;">${s.explain}</div>
+
+      ${practiceData ? `
+      <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);">
+        <strong>📥 练习文件：</strong>
+        <button class="btn" style="padding:8px 16px;font-size:0.82em;margin:6px 4px;"
+          onclick="downloadScenarioCSV('${s.id}')">📥 下载 CSV（用 WPS 打开练习）</button>
+        <button class="btn ghost" style="padding:8px 16px;font-size:0.82em;margin:6px 4px;"
+          onclick="renderSandbox('${s.id}')">🎯 在线沙箱练习</button>
+      </div>` : ''}
+
+      ${guide ? `
+      <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);">
+        <strong>💡 实操步骤：</strong>
+        <ol style="margin:6px 0 0 16px;line-height:1.8;font-size:0.88em;">
+          ${guide.steps.map(st => `<li>${st}</li>`).join('')}
+        </ol>
+      </div>
+      <div style="margin-top:10px;">
+        <strong>🌍 现实应用场景：</strong>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+          ${guide.apps.map(a => `<span class="skill-tag">📍 ${a}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
       ${s.related && s.related.length > 0 ? `
       <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
         <span style="color:var(--text-dim);">🔗 关联场景：</span>
