@@ -127,6 +127,12 @@
     padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.85em;
   }
   #back-btn:hover { border-color: var(--primary); }
+  .toggle-btn {
+    background: var(--success); color: #fff; border: none;
+    padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8em;
+    font-weight: bold; transition: all 0.2s;
+  }
+  .toggle-btn:hover { opacity: 0.85; }
 
   .question-card {
     background: var(--card);
@@ -371,7 +377,12 @@
   <div id="game-area">
     <div id="game-header">
       <h2 id="game-title"></h2>
-      <button id="back-btn" onclick="goMenu()">← 返回菜单</button>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span id="toggle-wrap" style="display:none;">
+          <button id="auto-advance-toggle" class="toggle-btn" onclick="toggleAutoAdvance()">⏳ 自动推进: 开</button>
+        </span>
+        <button id="back-btn" onclick="goMenu()">← 返回菜单</button>
+      </div>
     </div>
     <div id="game-content"></div>
   </div>
@@ -833,6 +844,10 @@ let state = {
   scenarioIdx: 0,
   scenarioFilter: '全部',
   scenarioCompleted: [],
+
+  // 通用设置
+  autoAdvance: true,
+  advanceTimer: null,
 };
 
 // ==================== 数据持久化 ====================
@@ -949,6 +964,18 @@ function showGame(title) {
   document.getElementById('game-area').classList.add('active');
   document.getElementById('result-screen').classList.remove('active');
   document.getElementById('game-title').textContent = title;
+  // 显示自动推进开关（快捷键和连连看模式除外）
+  const toggleWrap = document.getElementById('toggle-wrap');
+  if (['shortcut', 'match'].includes(state.game)) {
+    toggleWrap.style.display = 'none';
+  } else {
+    toggleWrap.style.display = '';
+    const btn = document.getElementById('auto-advance-toggle');
+    if (btn) {
+      btn.textContent = state.autoAdvance ? '⏳ 自动推进: 开' : '⏸ 自动推进: 关';
+      btn.style.background = state.autoAdvance ? 'var(--success)' : 'var(--text-dim)';
+    }
+  }
 }
 
 function showResult() {
@@ -972,9 +999,11 @@ function showResult() {
 
 function stopAll() {
   if (state.timer) { clearInterval(state.timer); state.timer = null; }
+  if (state.advanceTimer) { clearTimeout(state.advanceTimer); state.advanceTimer = null; }
   state.listening = false;
   document.removeEventListener('keydown', shortcutKeyHandler);
   document.removeEventListener('keyup', shortcutKeyUpHandler);
+  document.removeEventListener('keydown', globalKeyHandler);
 }
 
 // ==================== 游戏入口 ====================
@@ -1041,6 +1070,25 @@ function shuffleFour(correct, others) {
   const pool = shuffle(others).slice(0, 3);
   const options = [correct, ...pool];
   return shuffle(options);
+}
+
+// ==================== 全局键盘 & 设置 ====================
+function globalKeyHandler(e) {
+  if (!state.answered) return;
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (state.game === 'quiz') manualNextQuiz();
+    else if (state.game === 'scenario') nextScenario();
+  }
+}
+
+function toggleAutoAdvance() {
+  state.autoAdvance = !state.autoAdvance;
+  const btn = document.getElementById('auto-advance-toggle');
+  if (btn) {
+    btn.textContent = state.autoAdvance ? '⏳ 自动推进: 开' : '⏸ 自动推进: 关';
+    btn.style.background = state.autoAdvance ? 'var(--success)' : 'var(--text-dim)';
+  }
 }
 
 // ==================== 快捷键对战 ====================
@@ -1231,10 +1279,13 @@ function renderQuizGame() {
         <button class="option-btn" onclick="answerQuiz(${i})">${String.fromCharCode(65+i)}. ${opt}</button>
       `).join('')}
     </div>
-    <div style="text-align:center;color:var(--text-dim);font-size:0.8em;margin-top:12px;">
+    <div id="quiz-feedback"></div>
+    <div style="text-align:center;color:var(--text-dim);font-size:0.8em;margin-top:8px;">
       进度：${state.questionIdx + 1} / ${state.questions.length}
+      <span id="quiz-manual-btn"></span>
     </div>
   `;
+  document.addEventListener('keydown', globalKeyHandler);
 }
 
 function answerQuiz(choice) {
@@ -1255,16 +1306,37 @@ function answerQuiz(choice) {
     state.correctCount++;
     state.score += 10 + state.combo * 2;
     addStreak();
+    updateStatsUI();
+    if (state.advanceTimer) clearTimeout(state.advanceTimer);
+    state.advanceTimer = setTimeout(nextQuiz, 1200);
   } else {
     resetStreak();
+    updateStatsUI();
+    // 显示手动推进提示
+    const fb = document.getElementById('quiz-feedback');
+    if (fb) {
+      fb.innerHTML = '<div style="text-align:center;color:var(--danger);margin-top:6px;font-size:0.85em;">'
+        + (state.autoAdvance ? '⏳ 5秒后自动进入下一题' : '💡 按 <b>Enter</b> 或点击按钮进入下一题') + '</div>';
+    }
+    if (state.autoAdvance) {
+      if (state.advanceTimer) clearTimeout(state.advanceTimer);
+      state.advanceTimer = setTimeout(nextQuiz, 5000);
+    }
   }
+}
 
-  updateStatsUI();
-  setTimeout(nextQuiz, 1000);
+function manualNextQuiz() {
+  if (state.game !== 'quiz' || !state.answered) return;
+  if (state.advanceTimer) { clearTimeout(state.advanceTimer); state.advanceTimer = null; }
+  nextQuiz();
 }
 
 function nextQuiz() {
   if (state.game !== 'quiz') return;
+  state.advanceTimer = null;
+  // 清除提示文字
+  const fb = document.getElementById('quiz-feedback');
+  if (fb) fb.innerHTML = '';
   if (state.questionIdx < state.questions.length - 1) {
     state.questionIdx++;
     renderQuizGame();
@@ -1678,6 +1750,100 @@ function downloadScenarioCSV(id) {
   downloadCSV(s.table.h, s.table.rows, s.title + '.csv');
 }
 
+// 每个场景的错误选项解释（索引对应选项，正确答案为 null）
+const SCENARIO_WRONG_HINTS = {
+  s1: [
+    '用计算器手动加只适合3-5条数据的临时快速计算，数据多了效率极低且容易出错',
+    null,
+    '眼睛找+手写到新表是最原始的方式，几十条数据就会非常痛苦，而且容易遗漏',
+    '排序只是改变数据排列顺序，不能帮你汇总统计'
+  ],
+  s2: [
+    '手动剪切粘贴只适合2-3个单元格的临时处理，几十条数据这样做太慢了',
+    null,
+    '查找替换是批量修改文本内容的工具，不能把一列拆成两列',
+    '复制到Word再粘回来虽然勉强可行，但绕了一大圈，不是专业做法'
+  ],
+  s3: [
+    '手动改100次费时费力还容易出错，遇到几百份直接崩溃',
+    null,
+    'Excel里排版不支持Word的高级格式（页眉页脚、样式等），合同需要专业排版',
+    '复制100个文档逐个改和手动改没区别，一样低效'
+  ],
+  s4: [
+    '纯手动调整50页文档，改完一个标题还得一个个找下一个，格式永远对不齐',
+    null,
+    'Excel排版能力有限，不适合论文这种长文档的复杂排版需求',
+    '只调字体不加样式，目录、页眉、页码等问题还是没解决'
+  ],
+  s5: [
+    'LEFT取的是左边字符，18位身份证号从左边取14位拿到的是地区码+生日的一部分',
+    null,
+    'RIGHT取的是右边字符，身份证号右边8位是顺序码和校验码，不是生日',
+    'FIND的作用是查找某个字符在第几位，它返回的是位置数字，不是提取内容'
+  ],
+  s6: [
+    'SUBSTITUTE去掉所有空格后"王五"会变成"王五"，名字中间合理空格也被删了',
+    null,
+    'CLEAN清理的是换行符、制表符等不可见控制字符，不处理普通空格',
+    '手动删除只能对付几条数据，大量数据时又慢又容易漏'
+  ],
+  s7: [
+    '眼睛扫数据容易看漏，而且几十行数据根本扫不过来',
+    null,
+    '给单元格写备注适合做标注说明，不能自动高亮显示达标/不达标',
+    '删除不达标数据会让报表失真，老板需要看到全局情况'
+  ],
+  s8: [
+    '复制粘贴30次太慢，而且改一处要全部重来，100页更不可能',
+    null,
+    '一页一页改和复制粘贴一样低效，PPT的核心优势就是母版统一管理',
+    '导出为图片会失去可编辑性，后续改内容又要重新做图'
+  ],
+  s9: [
+    '在旁边写警告拦不住任何人，同事照样可能填错，而且看起来很不专业',
+    null,
+    '事后检查是补救措施不是预防措施，错误已经发生了',
+    '锁表不让人填就失去协作意义了，你需要的是控制而非禁止'
+  ],
+  s10: [
+    '只读模式所有人都不能编辑，包括需要填写的区域，失去了收集信息的目的',
+    null,
+    '在表头写"请勿修改"只是文字提示，没有任何实际的保护效果',
+    '加密文件是阻止打开文件，不是控制文件内的编辑权限'
+  ],
+  s11: [
+    'SUMIF是条件求和函数，会把所有匹配工号的工资加起来，而不是匹配单条记录',
+    null,
+    'IF只能做真假判断，不能跨表查找匹配数据',
+    '打出来手动对照失去了电子表格的自动化优势'
+  ],
+  s12: [
+    '便利贴不靠谱——贴歪了、掉了、数据多了根本对不上',
+    null,
+    '字体设大解决不了滚动后表头消失的问题，还浪费屏幕空间',
+    '分成多个小表破坏数据完整性，筛选排序跨表操作都不方便'
+  ],
+  s13: [
+    '两个独立柱形图无法直观对比销售额和利润率的关系，关联趋势看不出来',
+    null,
+    '饼图适合展示占比关系（如各产品份额），不能展示时间趋势',
+    '纯文字表格老板一眼看不出趋势，汇报效果大打折扣'
+  ],
+  s14: [
+    'SUMIF只能设一个条件，只能统计"上海"或"产品A"其中一个维度',
+    null,
+    'COUNTIF是计数函数，统计满足条件的个数而不是求和',
+    'SUMIF的第三个参数是求和区域，不能直接传两个条件'
+  ],
+  s15: [
+    '逐行查看去重适合5条以内的数据，50条以上眼睛就花了',
+    null,
+    '排序后手动识别还是靠眼睛，排了序但重复行不一定相邻（如果有细微差异）',
+    '筛选只能隐藏不显示，不能真正删除重复数据'
+  ],
+};
+
 // ==================== 场景实战 ====================
 function applyScenarioFilter() {
   if (state.scenarioFilter === '全部') {
@@ -1776,6 +1942,8 @@ function answerScenario(choice) {
     else if (i === choice) btn.classList.add('wrong');
   });
 
+  const wrongHints = SCENARIO_WRONG_HINTS[s.id];
+
   if (correct) {
     state.correctCount++;
     state.score += 20 + state.combo * 5;
@@ -1791,6 +1959,12 @@ function answerScenario(choice) {
     resetStreak();
   }
 
+  // 错误时的自动推进
+  if (!correct && state.autoAdvance) {
+    if (state.advanceTimer) clearTimeout(state.advanceTimer);
+    state.advanceTimer = setTimeout(() => nextScenario(), 5000);
+  }
+
   const fb = document.getElementById('scenario-feedback');
   const guide = PRACTICE_GUIDES[s.id];
   const practiceData = s.table;
@@ -1798,7 +1972,17 @@ function answerScenario(choice) {
   fb.innerHTML = `
     <div class="explanation-box">
       ${correct ? '<strong>✅ 回答正确！</strong>' : '<strong>❌ 回答错误</strong>'}
+      ${!correct && wrongHints && wrongHints[choice] ? `
+      <div style="margin-top:8px;padding:10px 14px;background:rgba(255,118,117,0.1);border-radius:8px;border-left:3px solid var(--danger);">
+        <strong>🔍 你选的「${s.opts[choice]}」是什么？</strong><br>
+        <span style="font-size:0.9em;">${wrongHints[choice]}</span>
+      </div>` : ''}
       <div style="margin-top:10px;">${s.explain}</div>
+
+      ${!correct && state.autoAdvance ? `
+      <div style="text-align:center;margin-top:8px;color:var(--text-dim);font-size:0.82em;">⏳ 5秒后自动进入下一个场景</div>` : ''}
+      ${!correct && !state.autoAdvance ? `
+      <div style="text-align:center;margin-top:8px;color:var(--text-dim);font-size:0.82em;">💡 按 <b>Enter</b> 或点击按钮进入下一个场景</div>` : ''}
 
       ${practiceData ? `
       <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);">
@@ -1841,6 +2025,7 @@ function answerScenario(choice) {
 
 function nextScenario() {
   if (state.game !== 'scenario') return;
+  if (state.advanceTimer) { clearTimeout(state.advanceTimer); state.advanceTimer = null; }
   state.scenarioIdx++;
   if (state.scenarioIdx >= state.scenarioPool.length && state.scenarioFilter.startsWith('🔧')) {
     state.scenarioFilter = '全部';
