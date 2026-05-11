@@ -10,6 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const STATE_DIR = join(__dirname, ".weixin-claude");
 const CREDS_PATH = join(STATE_DIR, "credentials.json");
 const SYNC_PATH = join(STATE_DIR, "sync-buf.json");
+const CONVOS_PATH = join(STATE_DIR, "conversations.json");
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-4-6-20250514";
@@ -328,9 +329,178 @@ function filterMarkdown(text) {
 }
 
 // ---------------------------------------------------------------------------
-// Claude API
+// Tools (same capabilities as Claude Code CLI)
 // ---------------------------------------------------------------------------
-async function callClaude(userId, userMessage) {
+const TOOLS = [
+  {
+    name: "read_file",
+    description: "读取文件内容",
+    input_schema: {
+      type: "object",
+      properties: {
+        file_path: { type: "string", description: "文件的绝对路径" },
+      },
+      required: ["file_path"],
+    },
+  },
+  {
+    name: "write_file",
+    description: "写入或创建文件",
+    input_schema: {
+      type: "object",
+      properties: {
+        file_path: { type: "string", description: "文件的绝对路径" },
+        content: { type: "string", description: "要写入的内容" },
+      },
+      required: ["file_path", "content"],
+    },
+  },
+  {
+    name: "run_command",
+    description: "执行 PowerShell 命令（Windows），返回 stdout/stderr。工作目录: C:\\Users\\liyou\\Downloads\\无敌了\\青云",
+    input_schema: {
+      type: "object",
+      properties: {
+        command: { type: "string", description: "要执行的 PowerShell 命令" },
+        timeout_ms: { type: "integer", description: "超时毫秒（默认 30000）", default: 30000 },
+      },
+      required: ["command"],
+    },
+  },
+  {
+    name: "search_code",
+    description: "在项目中搜索代码：grep 正则匹配文件内容",
+    input_schema: {
+      type: "object",
+      properties: {
+        pattern: { type: "string", description: "正则搜索模式（ripgrep 语法）" },
+        file_glob: { type: "string", description: "可选的文件过滤 glob，如 *.js, *.ts" },
+      },
+      required: ["pattern"],
+    },
+  },
+  {
+    name: "list_files",
+    description: "列出目录中的文件",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "目录的绝对路径" },
+      },
+      required: ["path"],
+    },
+  },
+  {
+    name: "web_search",
+    description: "在网络搜索信息",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "搜索关键词" },
+      },
+      required: ["query"],
+    },
+  },
+];
+
+const MAX_TOOL_ROUNDS = 8;
+
+async function executeTool(name, input) {
+  const { execSync } = await import("node:child_process");
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+
+  switch (name) {
+    case "read_file": {
+      const p = input.file_path;
+      if (!fs.existsSync(p)) return `文件不存在: ${p}`;
+      try {
+        const content = fs.readFileSync(p, "utf-8");
+        if (content.length > 20000) return content.slice(0, 20000) + `\n... (截断，共 ${content.length} 字符)`;
+        return content;
+      } catch (err) {
+        return `读取失败: ${err.message}`;
+      }
+    }
+
+    case "write_file": {
+      const p = input.file_path;
+      try {
+        const dir = path.dirname(p);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(p, input.content, "utf-8");
+        return `✅ 已写入: ${p} (${input.content.length} 字符)`;
+      } catch (err) {
+        return `写入失败: ${err.message}`;
+      }
+    }
+
+    case "run_command": {
+      try {
+        const timeout = Math.min(input.timeout_ms || 30000, 120000);
+        const result = execSync(input.command, {
+          encoding: "utf-8",
+          timeout,
+          maxBuffer: 500 * 1024,
+          cwd: "C:\\Users\\liyou\\Downloads\\无敌了\\青云",
+          shell: "powershell.exe",
+        });
+        const out = result.trim() || "(命令执行成功，无输出)";
+        return out.length > 8000 ? out.slice(0, 8000) + "\n... (截断)" : out;
+      } catch (err) {
+        return `命令执行失败: ${err.stderr || err.message}`;
+      }
+    }
+
+    case "search_code": {
+      try {
+        const globPart = input.file_glob ? ` -Include "${input.file_glob}"` : "";
+        const cmd = `Get-ChildItem -Path "C:\\Users\\liyou\\Downloads\\无敌了\\青云" -Recurse -File${globPart} -ErrorAction SilentlyContinue | Select-String -Pattern '${input.pattern.replace(/'/g, "''")}' | Select-Object -First 100`;
+        const result = execSync(cmd, { encoding: "utf-8", timeout: 30000, maxBuffer: 200 * 1024, shell: "powershell.exe" });
+        const out = result.trim() || "未找到匹配结果";
+        return out.length > 8000 ? out.slice(0, 8000) + "\n... (截断)" : out;
+      } catch (err) {
+        return `搜索失败: ${err.stderr || err.message}`;
+      }
+    }
+
+    case "list_files": {
+      const p = input.path;
+      try {
+        if (!fs.existsSync(p)) return `目录不存在: ${p}`;
+        const entries = fs.readdirSync(p, { withFileTypes: true }).slice(0, 200);
+        const lines = entries.map(e => `${e.isDirectory() ? "📁" : "📄"} ${e.name}`);
+        return lines.join("\n") || "空目录";
+      } catch (err) {
+        return `列出失败: ${err.message}`;
+      }
+    }
+
+    case "web_search": {
+      try {
+        const encoded = encodeURIComponent(input.query);
+        const res = await fetch(`https://api.duckduckgo.com/?q=${encoded}&format=json&no_html=1`, {
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (!res.ok) return `搜索请求失败: ${res.status}`;
+        const data = await res.json();
+        const results = (data.Results || []).slice(0, 5);
+        if (!results.length) return `未找到 "${input.query}" 的相关结果`;
+        return results.map(r => `- ${r.Text} (${r.FirstURL})`).join("\n");
+      } catch (err) {
+        return `搜索失败: ${err.message}`;
+      }
+    }
+
+    default:
+      return `未知工具: ${name}`;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Claude API (with tool use)
+// ---------------------------------------------------------------------------
+async function callClaude(userId, userMessage, notifyStatus) {
   if (!ANTHROPIC_KEY) throw new Error("请设置 ANTHROPIC_API_KEY 环境变量");
 
   const Anthropic = (await import("@anthropic-ai/sdk")).default;
@@ -339,35 +509,116 @@ async function callClaude(userId, userMessage) {
   let history = conversations.get(userId) || [];
   history.push({ role: "user", content: userMessage });
 
-  // Keep history manageable
   if (history.length > MAX_HISTORY) {
     history = history.slice(history.length - MAX_HISTORY);
   }
 
-  const systemPrompt = `你是一个通过微信与用户对话的AI助手。注意：
-- 用户通过微信发消息给你，回复会直接显示在微信聊天窗口
-- 微信不支持 Markdown 渲染，避免使用加粗、代码块等格式
-- 回复简洁直接，控制在微信消息长度内（过长会自动分段）
-- 使用中文回复（除非用户用其他语言）`;
+  const systemPrompt = `你是 Claude，现在通过微信与用户对话。你拥有和 Claude Code CLI 相同的工具能力。
 
-  const stream = client.messages.stream({
-    model: CLAUDE_MODEL,
-    max_tokens: 2048,
-    system: systemPrompt,
-    messages: history,
-  });
+<tools>
+- read_file: 读取本地文件
+- write_file: 创建/写入文件（路径用绝对路径，工作目录 C:\\Users\\liyou\\Downloads\\无敌了\\青云）
+- run_command: 执行 PowerShell 命令（可操作 git、npm、文件系统等）
+- search_code: 搜索代码（ripgrep 正则）
+- list_files: 列出目录内容
+- web_search: 网络搜索
+</tools>
 
-  let fullText = "";
-  for await (const event of stream) {
-    if (event.type === "content_block_delta" && event.delta?.text) {
-      fullText += event.delta.text;
+<rules>
+- 用户通过微信发消息，回复显示在微信聊天窗口
+- 微信不支持 Markdown，不要用加粗/斜体/代码块标记。代码直接缩进展示
+- 当用户让你做具体操作（写代码、查文件、运行命令等），直接调用工具完成，再告诉用户结果
+- 文件操作统一在 C:\\Users\\liyou\\Downloads\\无敌了\\青云 下
+- 工具调用结果可能被截断，关键信息优先返回
+- 用中文回复
+</rules>`;
+
+  const messages = [...history];
+  let toolRounds = 0;
+
+  while (toolRounds < MAX_TOOL_ROUNDS) {
+    const resp = await client.messages.create({
+      model: CLAUDE_MODEL,
+      max_tokens: 4096,
+      system: systemPrompt,
+      messages,
+      tools: TOOLS,
+    });
+
+    const textBlocks = resp.content.filter(c => c.type === "text");
+    const toolUses = resp.content.filter(c => c.type === "tool_use");
+
+    // Save assistant message to history
+    messages.push({ role: "assistant", content: resp.content });
+
+    if (toolUses.length === 0) {
+      // Done — save updated history and return text
+      history.push({ role: "assistant", content: resp.content });
+      conversations.set(userId, history);
+      saveConversations();
+      return textBlocks.map(c => c.text).join("");
     }
+
+    // Execute tools
+    if (notifyStatus) notifyStatus(`🔧 调用 ${toolUses.length} 个工具...`);
+
+    const toolResults = [];
+    for (const tu of toolUses) {
+      process.stdout.write(`  [tool] ${tu.name}(${JSON.stringify(tu.input).slice(0, 80)})\n`);
+      try {
+        const result = await executeTool(tu.name, tu.input);
+        toolResults.push({ type: "tool_result", tool_use_id: tu.id, content: result });
+        process.stdout.write(`    → ${result.length} 字符\n`);
+      } catch (err) {
+        toolResults.push({ type: "tool_result", tool_use_id: tu.id, content: `工具执行出错: ${err.message}`, is_error: true });
+        process.stdout.write(`    → 错误: ${err.message}\n`);
+      }
+    }
+
+    messages.push({ role: "user", content: toolResults });
+    toolRounds++;
   }
 
-  history.push({ role: "assistant", content: fullText });
-  conversations.set(userId, history);
+  // Max rounds reached — force final response
+  const resp = await client.messages.create({
+    model: CLAUDE_MODEL,
+    max_tokens: 4096,
+    system: systemPrompt,
+    messages,
+    tools: [{ name: "done", description: "完成", input_schema: { type: "object", properties: {} } }],
+  });
+  const text = resp.content.filter(c => c.type === "text").map(c => c.text).join("");
 
-  return fullText;
+  history.push({ role: "assistant", content: text });
+  conversations.set(userId, history);
+  saveConversations();
+  return text || "操作完成（已达工具调用上限）";
+}
+
+// ---------------------------------------------------------------------------
+// Conversation persistence
+// ---------------------------------------------------------------------------
+function saveConversations() {
+  try {
+    const obj = {};
+    for (const [userId, msgs] of conversations) {
+      obj[userId] = msgs;
+    }
+    writeFileSync(CONVOS_PATH, JSON.stringify(obj, null, 2), "utf-8");
+  } catch { /* best-effort */ }
+}
+
+function loadConversations() {
+  try {
+    if (existsSync(CONVOS_PATH)) {
+      const raw = JSON.parse(readFileSync(CONVOS_PATH, "utf-8"));
+      for (const [userId, msgs] of Object.entries(raw)) {
+        conversations.set(userId, msgs);
+      }
+      return Object.keys(raw).length;
+    }
+  } catch { /* ignore */ }
+  return 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -386,21 +637,21 @@ async function processMessage(msg, creds, typingTicket) {
   const text = extractText(msg);
   const contextToken = msg.context_token;
 
-  if (!text.trim()) return; // skip empty / media-only messages
+  if (!text.trim()) return;
 
   const now = new Date().toLocaleTimeString("zh-CN");
   process.stdout.write(`[${now}] ${userId}: ${text.slice(0, 80)}${text.length > 80 ? "..." : ""}\n`);
 
-  // Start typing indicator
   if (typingTicket) {
     sendTyping(creds.baseUrl, creds.token, userId, typingTicket, 1);
   }
 
   try {
-    const reply = await callClaude(userId, text);
+    const reply = await callClaude(userId, text, (status) => {
+      sendMessage(creds.baseUrl, creds.token, userId, status, contextToken).catch(() => {});
+    });
     const filtered = filterMarkdown(reply);
 
-    // Split long messages (WeChat has ~4000 char limit per message)
     const chunks = splitText(filtered, 3800);
     for (let i = 0; i < chunks.length; i++) {
       await sendMessage(creds.baseUrl, creds.token, userId, chunks[i], contextToken);
@@ -444,7 +695,7 @@ function sleep(ms) {
 
 async function main() {
   process.stdout.write("╔══════════════════════════════════╗\n");
-  process.stdout.write("║  微信 ←→ Claude 桥接 (iLink)    ║\n");
+  process.stdout.write("║  微信 ←→ Claude 桥接 (v2 工具)  ║\n");
   process.stdout.write("╚══════════════════════════════════╝\n\n");
 
   // Check credentials
@@ -474,6 +725,10 @@ async function main() {
   const configResp = await getConfig(creds.baseUrl, creds.token, creds.userId || "");
   const typingTicket = configResp.typing_ticket || null;
   if (typingTicket) process.stdout.write("已获取 typing ticket\n");
+
+  // Load conversation history
+  const convCount = loadConversations();
+  if (convCount > 0) process.stdout.write(`已恢复 ${convCount} 个用户的对话历史\n`);
 
   // Resume sync buf
   let syncBuf = loadSyncBuf();
