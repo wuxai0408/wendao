@@ -236,9 +236,17 @@ input[type=text] { padding:6px 10px; border:1px solid #dadce0; border-radius:6px
 </div>
 
 <script>
+console.log("控制台脚本 v3 已加载");
+
 async function api(path, opts={}) {
-  const res = await fetch(path, opts);
-  return res.json();
+  try {
+    const res = await fetch(path, opts);
+    if (!res.ok) throw new Error(res.status + " " + res.statusText);
+    return res.json();
+  } catch (err) {
+    console.error("API error:", path, err);
+    return null;
+  }
 }
 
 function allowUser() {
@@ -261,18 +269,26 @@ function blockUser(id) {
 }
 
 function switchChatUser() {
-  const sel = document.getElementById("chatUserSelect");
-  const id = sel.value;
+  var sel = document.getElementById("chatUserSelect");
+  if (!sel) return;
+  var id = sel.value;
   if (!id) { document.getElementById("chatContent").innerHTML = '<div class="empty">请选择一个用户查看对话记录</div>'; return; }
   window.location.hash = encodeURIComponent(id);
   viewChat(id);
 }
 
 function viewChat(id) {
-  document.getElementById("chatUserSelect").value = id;
+  console.log("viewChat called with id:", id);
+  const sel = document.getElementById("chatUserSelect");
+  if (sel) sel.value = id;
   const container = document.getElementById("chatContent");
+  if (!container) { console.error("chatContent not found"); return; }
   container.innerHTML = '<div class="empty">加载中...</div>';
   api("/api/chat/" + encodeURIComponent(id)).then(data => {
+    if (!data) {
+      container.innerHTML = '<div class="empty">加载失败，请检查控制台是否运行</div>';
+      return;
+    }
     if (data.length === 0) {
       container.innerHTML = '<div class="empty">暂无对话记录</div>';
       return;
@@ -289,21 +305,20 @@ function viewChat(id) {
   });
 }
 
-// Auto-load last viewed user from URL hash, or first user
-function init() {
+// Auto-load first user's chat on page load
+document.addEventListener("DOMContentLoaded", function() {
   const hash = window.location.hash.slice(1);
   if (hash) {
     const id = decodeURIComponent(hash);
     viewChat(id);
   } else {
-    const sel = document.getElementById("chatUserSelect");
-    if (sel.options.length > 1) {
+    var sel = document.getElementById("chatUserSelect");
+    if (sel && sel.options.length > 1) {
       sel.selectedIndex = 1;
       switchChatUser();
     }
   }
-}
-init();
+});
 
 function escapeHtml(s) {
   if (!s) return "";
@@ -388,7 +403,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Default: serve dashboard page
-  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache, no-store, must-revalidate" });
   res.end(renderPage());
 });
 
