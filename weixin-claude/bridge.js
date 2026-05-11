@@ -11,6 +11,7 @@ const STATE_DIR = join(__dirname, ".weixin-claude");
 const CREDS_PATH = join(STATE_DIR, "credentials.json");
 const SYNC_PATH = join(STATE_DIR, "sync-buf.json");
 const CONVOS_PATH = join(STATE_DIR, "conversations.json");
+const ALLOWED_PATH = join(STATE_DIR, "allowed-users.json");
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-4-6-20250514";
@@ -622,6 +623,58 @@ function loadConversations() {
 }
 
 // ---------------------------------------------------------------------------
+// Access control
+// ---------------------------------------------------------------------------
+function loadAllowedUsers() {
+  try {
+    if (existsSync(ALLOWED_PATH)) {
+      const data = JSON.parse(readFileSync(ALLOWED_PATH, "utf-8"));
+      return Array.isArray(data) ? data : [];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+
+function saveAllowedUsers(list) {
+  try {
+    writeFileSync(ALLOWED_PATH, JSON.stringify(list, null, 2), "utf-8");
+  } catch { /* best-effort */ }
+}
+
+function isAllowed(userId, adminUserId) {
+  const list = loadAllowedUsers();
+  if (list.length === 0) return true;                    // 空列表 = 允许所有人
+  return list.includes(userId) || userId === adminUserId; // 管理员永远允许
+}
+
+function handleAccessCommand(text, userId, adminUserId) {
+  const parts = text.trim().split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const target = parts[1];
+
+  if (cmd === "/allow" && target && userId === adminUserId) {
+    const list = loadAllowedUsers();
+    if (!list.includes(target)) {
+      list.push(target);
+      saveAllowedUsers(list);
+    }
+    return `✅ 已允许 ${target}`;
+  }
+  if (cmd === "/block" && target && userId === adminUserId) {
+    let list = loadAllowedUsers();
+    list = list.filter(id => id !== target);
+    saveAllowedUsers(list);
+    return `🚫 已停用 ${target}`;
+  }
+  if (cmd === "/list" && userId === adminUserId) {
+    const list = loadAllowedUsers();
+    if (list.length === 0) return "当前无限制，所有人均可使用。";
+    return `当前允许的用户:\n${list.join("\n")}`;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Message processing
 // ---------------------------------------------------------------------------
 function extractText(msg) {
@@ -636,8 +689,24 @@ async function processMessage(msg, creds, typingTicket) {
   const userId = msg.from_user_id;
   const text = extractText(msg);
   const contextToken = msg.context_token;
+  const adminUserId = creds.userId;
 
   if (!text.trim()) return;
+
+  // Admin commands: /allow, /block, /list
+  const cmdResult = handleAccessCommand(text, userId, adminUserId);
+  if (cmdResult) {
+    process.stdout.write(`[admin] ${userId}: ${text} -> ${cmdResult}\n`);
+    await sendMessage(creds.baseUrl, creds.token, userId, cmdResult, contextToken);
+    return;
+  }
+
+  // Access check
+  if (!isAllowed(userId, adminUserId)) {
+    process.stdout.write(`[blocked] ${userId}\n`);
+    await sendMessage(creds.baseUrl, creds.token, userId, "抱歉，您没有访问权限。", contextToken).catch(() => {});
+    return;
+  }
 
   const now = new Date().toLocaleTimeString("zh-CN");
   process.stdout.write(`[${now}] ${userId}: ${text.slice(0, 80)}${text.length > 80 ? "..." : ""}\n`);
