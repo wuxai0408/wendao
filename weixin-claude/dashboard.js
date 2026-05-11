@@ -236,18 +236,7 @@ input[type=text] { padding:6px 10px; border:1px solid #dadce0; border-radius:6px
 </div>
 
 <script>
-console.log("控制台脚本 v3 已加载");
-
-async function api(path, opts={}) {
-  try {
-    const res = await fetch(path, opts);
-    if (!res.ok) throw new Error(res.status + " " + res.statusText);
-    return res.json();
-  } catch (err) {
-    console.error("API error:", path, err);
-    return null;
-  }
-}
+console.log("控制台 v4 已加载");
 
 function allowUser() {
   const input = document.getElementById("newUserId");
@@ -270,54 +259,53 @@ function blockUser(id) {
 
 function switchChatUser() {
   var sel = document.getElementById("chatUserSelect");
-  if (!sel) return;
-  var id = sel.value;
-  if (!id) { document.getElementById("chatContent").innerHTML = '<div class="empty">请选择一个用户查看对话记录</div>'; return; }
-  window.location.hash = encodeURIComponent(id);
-  viewChat(id);
+  if (!sel || !sel.value) return;
+  viewChat(sel.value);
 }
 
 function viewChat(id) {
-  console.log("viewChat called with id:", id);
-  const sel = document.getElementById("chatUserSelect");
+  var sel = document.getElementById("chatUserSelect");
   if (sel) sel.value = id;
-  const container = document.getElementById("chatContent");
-  if (!container) { console.error("chatContent not found"); return; }
+  var container = document.getElementById("chatContent");
+  if (!container) return;
   container.innerHTML = '<div class="empty">加载中...</div>';
-  api("/api/chat/" + encodeURIComponent(id)).then(data => {
-    if (!data) {
-      container.innerHTML = '<div class="empty">加载失败，请检查控制台是否运行</div>';
-      return;
-    }
-    if (data.length === 0) {
-      container.innerHTML = '<div class="empty">暂无对话记录</div>';
-      return;
-    }
-    container.innerHTML = data.map(m => {
-      let cls = m.role === "user" ? "user" : m.role === "assistant" ? "assistant" : "system";
-      // Format tool calls/ results visually
-      let content = escapeHtml(m.content);
-      content = content.replace(/\[🔧 (\w+)\((.*?)\)\]/g, '<span style="color:#1a73e8;font-weight:600">🔧 $1</span> <span style="color:#666">$2</span>');
-      content = content.replace(/\[📋 结果:/g, '<span style="color:#137333">📋 结果:</span>');
-      return '<div class="msg ' + cls + '"><div class="role">' + m.role + '</div>' + content + '</div>';
-    }).join("");
-    container.scrollTop = container.scrollHeight;
-  });
+
+  fetch("/api/chat/" + encodeURIComponent(id))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty">暂无对话记录</div>';
+        return;
+      }
+      container.innerHTML = data.map(function(m) {
+        var cls = m.role === "用户" ? "user" : "assistant";
+        var content = m.content
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/\\n🔧 (.+?)\\n/g, '\\n<span style="color:#1a73e8;font-weight:600">🔧 $1</span>\\n')
+          .replace(/\\n📋 (.+?)\\n/g, '\\n<span style="color:#137333">📋 $1</span>\\n');
+        return '<div class="msg ' + cls + '"><div class="role">' + escapeHtml(m.role) + '</div>' + content + '</div>';
+      }).join("");
+      container.scrollTop = container.scrollHeight;
+    }).catch(function(err) {
+      container.innerHTML = '<div class="empty">加载失败: ' + err.message + '</div>';
+    });
 }
 
-// Auto-load first user's chat on page load
+// Auto-load first user's chat on page load (simple, like test page)
 document.addEventListener("DOMContentLoaded", function() {
-  const hash = window.location.hash.slice(1);
-  if (hash) {
-    const id = decodeURIComponent(hash);
-    viewChat(id);
-  } else {
-    var sel = document.getElementById("chatUserSelect");
-    if (sel && sel.options.length > 1) {
-      sel.selectedIndex = 1;
-      switchChatUser();
+  fetch("/api/stats").then(function(r) { return r.json(); }).then(function(stats) {
+    if (!stats.users || stats.users.length === 0) return;
+    // Auto-load the first user or hash
+    var hash = window.location.hash.slice(1);
+    var userId = hash ? decodeURIComponent(hash) : stats.users[0].userId;
+    if (document.getElementById("chatUserSelect")) {
+      document.getElementById("chatUserSelect").value = userId;
     }
-  }
+    viewChat(userId);
+  }).catch(function(err) {
+    console.error("init failed:", err);
+    document.getElementById("chatContent").innerHTML = '<div class="error">连接控制台失败，请确认服务在运行</div>';
+  });
 });
 
 function escapeHtml(s) {
@@ -400,6 +388,13 @@ const server = http.createServer(async (req, res) => {
       creds: getCreds(),
       allowed: loadJSON(ALLOWED_PATH, []),
     });
+  }
+
+  // Serve test page
+  if (url.pathname === "/test") {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(readFileSync(join(__dirname, "test-chat.html"), "utf-8"));
+    return;
   }
 
   // Default: serve dashboard page
