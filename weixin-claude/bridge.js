@@ -13,6 +13,22 @@ const SYNC_PATH = join(STATE_DIR, "sync-buf.json");
 const CONVOS_PATH = join(STATE_DIR, "conversations.json");
 const ALLOWED_PATH = join(STATE_DIR, "allowed-users.json");
 
+function loadEnv() {
+  try {
+    const envPath = join(__dirname, ".env");
+    if (existsSync(envPath)) {
+      const content = readFileSync(envPath, "utf-8");
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#")) {
+          const eq = trimmed.indexOf("=");
+          if (eq > 0) process.env[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+        }
+      }
+    }
+  } catch { /* ignore */ }
+}
+loadEnv();
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-4-6-20250514";
 
