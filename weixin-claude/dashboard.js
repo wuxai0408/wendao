@@ -77,22 +77,24 @@ function formatChatHistory(userId) {
 
     if (typeof msg.content === "string") {
       content = msg.content;
-      role = msg.role;
+      role = msg.role === "user" ? "用户" : "Claude";
     } else if (Array.isArray(msg.content)) {
       const parts = [];
       for (const block of msg.content) {
-        if (block.type === "text") parts.push(block.text);
-        else if (block.type === "tool_use") parts.push(`[🔧 ${block.name}(${JSON.stringify(block.input).slice(0, 100)})]`);
-        else if (block.type === "tool_result") {
-          const preview = typeof block.content === "string" ? block.content.slice(0, 200) : "";
-          parts.push(`[📋 结果: ${preview}${block.is_error ? " ❌" : ""}]`);
+        if (block.type === "text") {
+          parts.push(block.text);
+        } else if (block.type === "tool_use") {
+          parts.push(`\n🔧 调用工具: ${block.name}(${JSON.stringify(block.input).slice(0, 200)})\n`);
+        } else if (block.type === "tool_result") {
+          const preview = typeof block.content === "string" ? block.content.slice(0, 500) : "";
+          parts.push(`\n📋 工具返回${block.is_error ? " ❌" : ""}:\n${preview}\n`);
         }
       }
-      content = parts.join("\n");
-      role = msg.role;
+      content = parts.join("");
+      role = msg.role === "user" ? "用户" : "Claude";
     } else {
       content = JSON.stringify(msg.content);
-      role = msg.role;
+      role = msg.role === "user" ? "用户" : "Claude";
     }
 
     return { index: i, role, content };
@@ -141,12 +143,17 @@ td { font-size:14px; }
 .btn-block { color:#c5221f; border-color:#c5221f; }
 .btn-allow { color:#137333; border-color:#137333; }
 .empty { color:#999; font-size:14px; padding:20px 0; text-align:center; }
-.chat { max-height:500px; overflow-y:auto; padding:10px; background:#f8f9fa; border-radius:8px; font-size:13px; }
-.chat .msg { margin-bottom:12px; border-radius:8px; padding:10px 14px; max-width:85%; white-space:pre-wrap; word-break:break-word; }
+.chat { max-height:600px; overflow-y:auto; padding:16px; background:#f8f9fa; border-radius:8px; font-size:13px; line-height:1.6; display:flex; flex-direction:column; gap:12px; }
+.chat .msg { border-radius:8px; padding:12px 16px; max-width:85%; white-space:pre-wrap; word-break:break-word; }
 .chat .user { background:#e8f0fe; margin-right:auto; }
-.chat .assistant { background:#e6f4ea; margin-left:auto; text-align:right; }
+.chat .assistant { background:#fff; border:1px solid #e0e0e0; margin-right:auto; }
 .chat .system { background:#fff3cd; text-align:center; margin:0 auto; font-size:11px; padding:6px; }
-.chat .role { font-size:10px; opacity:.6; margin-bottom:4px; }
+.chat .role { font-size:11px; font-weight:600; margin-bottom:6px; color:#555; display:flex; align-items:center; gap:4px; }
+.chat .role::before { content:''; width:8px; height:8px; border-radius:50%; display:inline-block; }
+.chat .user .role::before { background:#1a73e8; }
+.chat .assistant .role::before { background:#137333; }
+.chat .tool-use { background:#e3f2fd; border:1px dashed #90caf9; margin:4px 0; padding:8px 12px; border-radius:6px; font-size:12px; }
+.chat .tool-result { background:#e8f5e9; border:1px dashed #a5d6a7; margin:4px 0; padding:8px 12px; border-radius:6px; font-size:11px; max-height:200px; overflow-y:auto; }
 .action-bar { display:flex; gap:8px; align-items:center; margin-top:15px; }
 input[type=text] { padding:6px 10px; border:1px solid #dadce0; border-radius:6px; font-size:13px; width:320px; }
 .back-link { cursor:pointer; color:#1a73e8; font-size:13px; }
@@ -189,18 +196,18 @@ input[type=text] { padding:6px 10px; border:1px solid #dadce0; border-radius:6px
       <span style="font-size:12px;color:#999;margin-left:8px">添加后白名单生效，仅名单内用户可用</span>
     </div>
     <table id="userTable">
-      <thead><tr><th>用户 ID</th><th>身份</th><th>消息数</th><th>状态</th><th>最后消息</th><th>操作</th></tr></thead>
+      <thead><tr><th>用户 ID</th><th>身份</th><th>消息数</th><th>状态</th><th>操作</th></tr></thead>
       <tbody>
         ${users.length === 0
-          ? '<tr><td colspan="6" class="empty">暂无用户数据</td></tr>'
+          ? '<tr><td colspan="5" class="empty">暂无用户数据</td></tr>'
           : users.map(u => `
             <tr>
-              <td><a class="back-link" onclick="viewChat('${escapeHtml(u.userId)}')">${escapeHtml(u.userId)}</a></td>
+              <td><span style="font-weight:500">${escapeHtml(u.userId)}</span></td>
               <td>${u.isAdmin ? '<span class="badge badge-admin">管理员</span>' : '用户'}</td>
               <td>${u.msgCount}</td>
               <td><span class="badge ${u.isAllowed ? 'badge-on' : 'badge-off'}">${u.isAllowed ? '已授权' : '已停用'}</span></td>
-              <td style="font-size:12px;color:#999;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.lastMsg)}</td>
               <td>
+                <button class="btn" onclick="viewChat('${escapeHtml(u.userId)}')" style="margin-right:4px">📋 查看对话</button>
                 ${u.isAdmin
                   ? '<span style="color:#999;font-size:11px">—</span>'
                   : (u.isAllowed
@@ -214,9 +221,17 @@ input[type=text] { padding:6px 10px; border:1px solid #dadce0; border-radius:6px
     </table>
   </div>
 
-  <div class="section" id="chatSection" style="display:none">
-    <h2><span class="back-link" onclick="hideChat()">← 返回列表</span> &nbsp; 对话历史 — <span id="chatUserId"></span></h2>
-    <div class="chat" id="chatContent"></div>
+  <div class="section" id="chatSection">
+    <h2>
+      对话记录 —
+      <select id="chatUserSelect" onchange="switchChatUser()" style="font-size:14px;padding:4px 8px;margin-left:8px">
+        <option value="">— 选择用户 —</option>
+        ${users.map(u => `<option value="${escapeHtml(u.userId)}">${escapeHtml(u.userId)} (${u.msgCount}条)</option>`).join("")}
+      </select>
+    </h2>
+    <div class="chat" id="chatContent">
+      <div class="empty">请选择一个用户查看对话记录</div>
+    </div>
   </div>
 </div>
 
@@ -240,31 +255,55 @@ function allowUserDirect(id) {
 }
 
 function blockUser(id) {
-  if (!confirm("确定要停用 " + id + " 吗？\\\\n停用后该用户将无法发送消息或调用 API。")) return;
+  if (!confirm("确定要停用 " + id + " 吗？\\n停用后该用户将无法发送消息或调用 API。")) return;
   api("/api/block", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId:id}) })
     .then(() => location.reload());
 }
 
+function switchChatUser() {
+  const sel = document.getElementById("chatUserSelect");
+  const id = sel.value;
+  if (!id) { document.getElementById("chatContent").innerHTML = '<div class="empty">请选择一个用户查看对话记录</div>'; return; }
+  window.location.hash = encodeURIComponent(id);
+  viewChat(id);
+}
+
 function viewChat(id) {
+  document.getElementById("chatUserSelect").value = id;
+  const container = document.getElementById("chatContent");
+  container.innerHTML = '<div class="empty">加载中...</div>';
   api("/api/chat/" + encodeURIComponent(id)).then(data => {
-    document.getElementById("chatSection").style.display = "block";
-    document.getElementById("chatUserId").textContent = id;
-    const container = document.getElementById("chatContent");
     if (data.length === 0) {
       container.innerHTML = '<div class="empty">暂无对话记录</div>';
       return;
     }
     container.innerHTML = data.map(m => {
-      const cls = m.role === "user" ? "user" : m.role === "assistant" ? "assistant" : "system";
-      return '<div class="msg ' + cls + '"><div class="role">' + escapeHtml(m.role) + '</div>' + escapeHtml(m.content) + '</div>';
+      let cls = m.role === "user" ? "user" : m.role === "assistant" ? "assistant" : "system";
+      // Format tool calls/ results visually
+      let content = escapeHtml(m.content);
+      content = content.replace(/\[🔧 (\w+)\((.*?)\)\]/g, '<span style="color:#1a73e8;font-weight:600">🔧 $1</span> <span style="color:#666">$2</span>');
+      content = content.replace(/\[📋 结果:/g, '<span style="color:#137333">📋 结果:</span>');
+      return '<div class="msg ' + cls + '"><div class="role">' + m.role + '</div>' + content + '</div>';
     }).join("");
     container.scrollTop = container.scrollHeight;
   });
 }
 
-function hideChat() {
-  document.getElementById("chatSection").style.display = "none";
+// Auto-load last viewed user from URL hash, or first user
+function init() {
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const id = decodeURIComponent(hash);
+    viewChat(id);
+  } else {
+    const sel = document.getElementById("chatUserSelect");
+    if (sel.options.length > 1) {
+      sel.selectedIndex = 1;
+      switchChatUser();
+    }
+  }
 }
+init();
 
 function escapeHtml(s) {
   if (!s) return "";
