@@ -701,53 +701,29 @@ async function downloadAndDecryptImage(encryptQueryParam, aesKeyBase64, fullUrl)
   return decryptAesEcb(encrypted, key);
 }
 
+// Pre-initialized Tesseract worker (loaded once at first use)
+let _ocrWorker = null;
+async function getOcrWorker() {
+  if (_ocrWorker) return _ocrWorker;
+  const { createWorker } = await import("tesseract.js");
+  _ocrWorker = await createWorker("chi_sim+eng", 1, {
+    logger: () => {}, // silent
+  });
+  return _ocrWorker;
+}
+
 async function ocrImage(imageBuffer) {
-  const { execSync } = await import("node:child_process");
   if (!existsSync(IMAGES_TEMP_DIR)) mkdirSync(IMAGES_TEMP_DIR, { recursive: true });
-  const tempPath = join(IMAGES_TEMP_DIR, `weixin-img-${Date.now()}.png`);
+  const tempPath = join(IMAGES_TEMP_DIR, `wximg-${Date.now()}.png`);
   writeFileSync(tempPath, imageBuffer);
-
-  // Windows built-in OCR script (fast, no init cost)
-  const psPath = join(IMAGES_TEMP_DIR, "_ocr.ps1");
-  const escapedImgPath = tempPath.replace(/'/g, "''");
-  writeFileSync(psPath, `Add-Type -AssemblyName System.Drawing
-$img = [System.Drawing.Image]::FromFile('${escapedImgPath}')
-$bmp = New-Object System.Drawing.Bitmap($img)
-$stream = New-Object System.IO.MemoryStream
-$bmp.Save($stream, [System.Drawing.Imaging.ImageFormat]::Png)
-$bytes = $stream.ToArray()
-$stream.Close(); $bmp.Dispose(); $img.Dispose()
-[Windows.Media.Ocr.OcrEngine, Windows.Media.Ocr, ContentType = WindowsRuntime] | Out-Null
-$engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()
-if (-not $engine) { $engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromLanguage('zh-Hans-CN') }
-if (-not $engine) { $engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromLanguage('en-US') }
-$memStream = New-Object Windows.Storage.Streams.InMemoryRandomAccessStream
-$writer = New-Object Windows.Storage.Streams.DataWriter($memStream.GetOutputStreamAt(0))
-$writer.WriteBytes($bytes)
-$writer.StoreAsync().AsTask().Wait()
-$decoder = [Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($memStream).AsTask().Result
-$frame = $decoder.GetFrameAsync(0).AsTask().Result
-$sw = $frame.GetSoftwareBitmapAsync().AsTask().Result
-$result = $engine.RecognizeAsync($sw).AsTask().Result
-$result.Lines | ForEach-Object { $_.Text }
-`);
-
   try {
-    const result = execSync(`powershell -NoProfile -ExecutionPolicy Bypass -File "${psPath}"`, {
-      encoding: "utf-8", timeout: 15000, maxBuffer: 500 * 1024,
-    });
-    return result.trim() || "";
+    const worker = await getOcrWorker();
+    const { data } = await worker.recognize(tempPath);
+    return data.text?.trim() || "";
   } catch {
-    // Fallback to Tesseract if Windows OCR fails
-    try {
-      const Tesseract = (await import("tesseract.js")).default;
-      const { data } = await Tesseract.recognize(tempPath, "chi_sim+eng");
-      return data.text?.trim() || "";
-    } catch {
-      return "";
-    }
+    return "";
   } finally {
-    try { unlinkSync(tempPath); unlinkSync(psPath); } catch {}
+    try { unlinkSync(tempPath); } catch {}
   }
 }
 
