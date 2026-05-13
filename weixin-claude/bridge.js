@@ -557,7 +557,16 @@ async function callClaude(userId, userMessage, notifyStatus) {
 - 文件操作统一在 C:\\Users\\liyou\\Downloads\\无敌了\\青云 下
 - 工具调用结果可能被截断，关键信息优先返回
 - 用中文回复
-</rules>`;
+</rules>
+
+<auto_ocr>
+用户发图片时的流程（全自动，你不需要做任何事）：
+1. 桥接自动从微信CDN下载图片 → AES解密 → OCR识别文字
+2. 识别结果以 [图片N文字]: ... 的形式出现在消息中
+3. 你直接基于识别出的文字回复用户问题即可
+
+重要：图片识别是全自动的。绝对不要用 list_files 去翻 images 文件夹，不要用 run_command 去找图片，不要叫用户"把图片放到文件夹"。你收到的消息里已经有 OCR 结果了，直接用。
+</auto_ocr>`;
 
   const messages = [...history];
   let toolRounds = 0;
