@@ -536,10 +536,19 @@ async function callClaude(userId, userMessage, notifyStatus) {
 - read_file: 读取本地文件
 - write_file: 创建/写入文件（路径用绝对路径，工作目录 C:\\Users\\liyou\\Downloads\\无敌了\\青云）
 - run_command: 执行 PowerShell 命令（可操作 git、npm、文件系统等）
-- search_code: 搜索代码（ripgrep 正则）
+- search_code: 搜索代码（Select-String 搜索）
 - list_files: 列出目录内容
 - web_search: 网络搜索
 </tools>
+
+<mandatory_lessons>
+以下错误绝不再犯：
+
+1. 用户问"能不能做X" → 如果第一反应是"不能"，必须先问自己：核心功能是什么？我有什么工具？有没有绕过限制的第三条路？禁止直接说"不能"。
+2. 出现异常 → 先写最小 debug 脚本查裸返回数据，定位根因后再改代码。禁止在业务逻辑层直接打补丁。
+3. 代码在膨胀 → 停下来问"最简单版本是什么样？"禁止为单一场景建抽象层。
+4. 用户要产出物 → 先确认格式再动手。禁止默认猜用户要什么格式。
+</mandatory_lessons>
 
 <rules>
 - 用户通过微信发消息，回复显示在微信聊天窗口
