@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
@@ -672,6 +672,71 @@ function isAllowed(userId, adminUserId) {
   return list.includes(userId) || userId === adminUserId; // 管理员永远允许
 }
 
+// ---------------------------------------------------------------------------
+// Image download + OCR (AES-128-ECB decrypt from WeChat CDN)
+// ---------------------------------------------------------------------------
+const CDN_BASE_URL = "https://novac2c.cdn.weixin.qq.com/c2c";
+const IMAGES_TEMP_DIR = join(__dirname, "images");
+
+function decryptAesEcb(ciphertext, key) {
+  const decipher = crypto.createDecipheriv("aes-128-ecb", key, null);
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+}
+
+function parseAesKey(aesKeyBase64) {
+  const decoded = Buffer.from(aesKeyBase64, "base64");
+  if (decoded.length === 16) return decoded;
+  if (decoded.length === 32 && /^[0-9a-fA-F]{32}$/.test(decoded.toString("ascii"))) {
+    return Buffer.from(decoded.toString("ascii"), "hex");
+  }
+  throw new Error(`Invalid AES key format (${decoded.length} bytes)`);
+}
+
+async function downloadAndDecryptImage(encryptQueryParam, aesKeyBase64, fullUrl) {
+  const key = parseAesKey(aesKeyBase64);
+  const url = fullUrl || `${CDN_BASE_URL}/download?encrypted_query_param=${encodeURIComponent(encryptQueryParam)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`CDN download failed: ${res.status}`);
+  const encrypted = Buffer.from(await res.arrayBuffer());
+  return decryptAesEcb(encrypted, key);
+}
+
+async function ocrImage(imageBuffer) {
+  const Tesseract = (await import("tesseract.js")).default;
+  if (!existsSync(IMAGES_TEMP_DIR)) mkdirSync(IMAGES_TEMP_DIR, { recursive: true });
+  const tempPath = join(IMAGES_TEMP_DIR, `weixin-img-${Date.now()}.jpg`);
+  writeFileSync(tempPath, imageBuffer);
+  try {
+    const { data } = await Tesseract.recognize(tempPath, "chi_sim+eng");
+    return data.text?.trim() || "";
+  } finally {
+    try { unlinkSync(tempPath); } catch {}
+  }
+}
+
+async function handleImageMessage(msg, creds) {
+  const results = [];
+  for (const item of (msg.item_list || [])) {
+    if (item.type !== 2) continue; // 2 = IMAGE
+    const img = item.image_item;
+    const encryptParam = img?.media?.encrypt_query_param;
+    const aesKey = img?.media?.aes_key;
+    const fullUrl = img?.media?.full_url;
+    if ((!encryptParam && !fullUrl) || !aesKey) continue;
+    try {
+      const decrypted = await downloadAndDecryptImage(encryptParam, aesKey, fullUrl);
+      const text = await ocrImage(decrypted);
+      if (text) results.push(text);
+    } catch (err) {
+      process.stdout.write(`  [图片识别失败] ${err.message}\n`);
+    }
+  }
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// Access control
+// ---------------------------------------------------------------------------
 function handleAccessCommand(text, userId, adminUserId) {
   const parts = text.trim().split(/\s+/);
   const cmd = parts[0].toLowerCase();
@@ -716,12 +781,29 @@ async function processMessage(msg, creds, typingTicket) {
   const contextToken = msg.context_token;
   const adminUserId = creds.userId;
 
-  if (!text.trim()) return;
+  // Check for images — download + OCR
+  const hasImages = (msg.item_list || []).some(i => i.type === 2);
+  let ocrTexts = [];
+  if (hasImages) {
+    process.stdout.write(`[${new Date().toLocaleTimeString("zh-CN")}] ${userId}: [图片] 正在识别...\n`);
+    ocrTexts = await handleImageMessage(msg, creds);
+    for (const ocr of ocrTexts) {
+      process.stdout.write(`  → OCR: ${ocr.slice(0, 80)}${ocr.length > 80 ? "..." : ""}\n`);
+    }
+  }
+
+  // Combine text caption + OCR results
+  let fullText = text.trim();
+  if (ocrTexts.length > 0) {
+    const ocrBlock = ocrTexts.map((t, i) => `[图片${i + 1}文字]: ${t}`).join("\n");
+    fullText = fullText ? `${fullText}\n${ocrBlock}` : ocrBlock;
+  }
+  if (!fullText) return;
 
   // Admin commands: /allow, /block, /list
-  const cmdResult = handleAccessCommand(text, userId, adminUserId);
+  const cmdResult = handleAccessCommand(fullText, userId, adminUserId);
   if (cmdResult) {
-    process.stdout.write(`[admin] ${userId}: ${text} -> ${cmdResult}\n`);
+    process.stdout.write(`[admin] ${userId}: ${fullText.slice(0, 60)} -> ${cmdResult}\n`);
     await sendMessage(creds.baseUrl, creds.token, userId, cmdResult, contextToken);
     return;
   }
@@ -734,14 +816,14 @@ async function processMessage(msg, creds, typingTicket) {
   }
 
   const now = new Date().toLocaleTimeString("zh-CN");
-  process.stdout.write(`[${now}] ${userId}: ${text.slice(0, 80)}${text.length > 80 ? "..." : ""}\n`);
+  process.stdout.write(`[${now}] ${userId}: ${fullText.slice(0, 80)}${fullText.length > 80 ? "..." : ""}\n`);
 
   if (typingTicket) {
     sendTyping(creds.baseUrl, creds.token, userId, typingTicket, 1);
   }
 
   try {
-    const reply = await callClaude(userId, text, (status) => {
+    const reply = await callClaude(userId, fullText, (status) => {
       sendMessage(creds.baseUrl, creds.token, userId, status, contextToken).catch(() => {});
     });
     const filtered = filterMarkdown(reply);
