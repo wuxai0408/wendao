@@ -1,0 +1,686 @@
+﻿{
+    "blockchain-security-auditor.md":  {
+                                           "name":  "Blockchain Security Auditor",
+                                           "mission":  ""
+                                       },
+    "testing-tool-evaluator.md":  {
+                                      "name":  "Tool Evaluator Agent Personality",
+                                      "mission":  ""
+                                  },
+    "engineering-data-engineer.md":  {
+                                         "name":  "Data Engineer Agent",
+                                         "mission":  ""
+                                     },
+    "engineering-ai-engineer.md":  {
+                                       "name":  "AI Engineer Agent",
+                                       "mission":  ""
+                                   },
+    "product-manager.md":  {
+                               "name":  "馃Л Product Manager Agent",
+                               "mission":  ""
+                           },
+    "supply-chain-strategist.md":  {
+                                       "name":  "Supply Chain Strategist Agent",
+                                       "mission":  ""
+                                   },
+    "EXECUTIVE-BRIEF.md":  {
+                               "name":  "馃搼 NEXUS Executive Brief",
+                               "mission":  ""
+                           },
+    "sales-data-extraction-agent.md":  {
+                                           "name":  "2b6cb0\"",
+                                           "mission":  ""
+                                       },
+    "specialized-chief-of-staff.md":  {
+                                          "name":  "6B7280\"",
+                                          "mission":  ""
+                                      },
+    "support-executive-summary-generator.md":  {
+                                                   "name":  "Executive Summary Generator Agent Personality",
+                                                   "mission":  ""
+                                               },
+    "marketing-china-ecommerce-operator.md":  {
+                                                  "name":  "Marketing China E-Commerce Operator",
+                                                  "mission":  ""
+                                              },
+    "testing-api-tester.md":  {
+                                  "name":  "API Tester Agent Personality",
+                                  "mission":  ""
+                              },
+    "finance-investment-researcher.md":  {
+                                             "name":  "馃攳 Investment Researcher Agent",
+                                             "mission":  ""
+                                         },
+    "marketing-podcast-strategist.md":  {
+                                            "name":  "Marketing Podcast Strategist",
+                                            "mission":  ""
+                                        },
+    "engineering-solidity-smart-contract-engineer.md":  {
+                                                            "name":  "Solidity Smart Contract Engineer",
+                                                            "mission":  ""
+                                                        },
+    "marketing-kuaishou-strategist.md":  {
+                                             "name":  "Marketing Kuaishou Strategist",
+                                             "mission":  ""
+                                         },
+    "academic-psychologist.md":  {
+                                     "name":  "EC4899\"",
+                                     "mission":  ""
+                                 },
+    "xr-immersive-developer.md":  {
+                                      "name":  "XR Immersive Developer Agent Personality",
+                                      "mission":  ""
+                                  },
+    "academic-narratologist.md":  {
+                                      "name":  "8B5CF6\"",
+                                      "mission":  ""
+                                  },
+    "finance-bookkeeper-controller.md":  {
+                                             "name":  "馃搾 Bookkeeper \u0026 Controller Agent",
+                                             "mission":  ""
+                                         },
+    "paid-media-auditor.md":  {
+                                  "name":  "Paid Media Auditor Agent",
+                                  "mission":  ""
+                              },
+    "marketing-short-video-editing-coach.md":  {
+                                                   "name":  "7B2D8E\"",
+                                                   "mission":  ""
+                                               },
+    "sales-outbound-strategist.md":  {
+                                         "name":  "E8590C\"",
+                                         "mission":  ""
+                                     },
+    "customer-service.md":  {
+                                "name":  "馃帶 Customer Service Agent",
+                                "mission":  ""
+                            },
+    "corporate-training-designer.md":  {
+                                           "name":  "Corporate Training Designer",
+                                           "mission":  ""
+                                       },
+    "recruitment-specialist.md":  {
+                                      "name":  "Recruitment Specialist Agent",
+                                      "mission":  ""
+                                  },
+    "sales-account-strategist.md":  {
+                                        "name":  "2E7D32\"",
+                                        "mission":  ""
+                                    },
+    "accounts-payable-agent.md":  {
+                                      "name":  "Accounts Payable Agent Personality",
+                                      "mission":  ""
+                                  },
+    "marketing-twitter-engager.md":  {
+                                         "name":  "1DA1F2\"",
+                                         "mission":  ""
+                                     },
+    "specialized-korean-business-navigator.md":  {
+                                                     "name":  "003478\"",
+                                                     "mission":  ""
+                                                 },
+    "engineering-threat-detection-engineer.md":  {
+                                                     "name":  "7b2d8e\"",
+                                                     "mission":  ""
+                                                 },
+    "agentic-identity-trust.md":  {
+                                      "name":  "2d5a27\"",
+                                      "mission":  ""
+                                  },
+    "support-analytics-reporter.md":  {
+                                          "name":  "Analytics Reporter Agent Personality",
+                                          "mission":  ""
+                                      },
+    "engineering-software-architect.md":  {
+                                              "name":  "Software Architect Agent",
+                                              "mission":  ""
+                                          },
+    "agents-orchestrator.md":  {
+                                   "name":  "AgentsOrchestrator Agent Personality",
+                                   "mission":  ""
+                               },
+    "marketing-douyin-strategist.md":  {
+                                           "name":  "000000\"",
+                                           "mission":  ""
+                                       },
+    "engineering-rapid-prototyper.md":  {
+                                            "name":  "Rapid Prototyper Agent Personality",
+                                            "mission":  ""
+                                        },
+    "support-infrastructure-maintainer.md":  {
+                                                 "name":  "Infrastructure Maintainer Agent Personality",
+                                                 "mission":  ""
+                                             },
+    "zk-steward.md":  {
+                          "name":  "ZK Steward Agent",
+                          "mission":  ""
+                      },
+    "automation-governance-architect.md":  {
+                                               "name":  "Automation Governance Architect",
+                                               "mission":  ""
+                                           },
+    "marketing-china-market-localization-strategist.md":  {
+                                                              "name":  "E60012\"",
+                                                              "mission":  ""
+                                                          },
+    "marketing-ai-citation-strategist.md":  {
+                                                "name":  "6D28D9\"",
+                                                "mission":  ""
+                                            },
+    "macos-spatial-metal-engineer.md":  {
+                                            "name":  "macOS Spatial/Metal Engineer Agent Personality",
+                                            "mission":  ""
+                                        },
+    "design-ux-architect.md":  {
+                                   "name":  "ArchitectUX Agent Personality",
+                                   "mission":  ""
+                               },
+    "specialized-model-qa.md":  {
+                                    "name":  "B22222\"",
+                                    "mission":  ""
+                                },
+    "design-brand-guardian.md":  {
+                                     "name":  "Brand Guardian Agent Personality",
+                                     "mission":  ""
+                                 },
+    "report-distribution-agent.md":  {
+                                         "name":  "d69e2e\"",
+                                         "mission":  ""
+                                     },
+    "level-designer.md":  {
+                              "name":  "Level Designer Agent Personality",
+                              "mission":  ""
+                          },
+    "marketing-baidu-seo-specialist.md":  {
+                                              "name":  "Marketing Baidu SEO Specialist",
+                                              "mission":  ""
+                                          },
+    "finance-fpa-analyst.md":  {
+                                   "name":  "馃搱 FP\u0026A Analyst Agent",
+                                   "mission":  ""
+                               },
+    "paid-media-tracking-specialist.md":  {
+                                              "name":  "Paid Media Tracking \u0026 Measurement Specialist Agent",
+                                              "mission":  ""
+                                          },
+    "lsp-index-engineer.md":  {
+                                  "name":  "LSP/Index Engineer Agent Personality",
+                                  "mission":  ""
+                              },
+    "sales-discovery-coach.md":  {
+                                     "name":  "5C7CFA\"",
+                                     "mission":  ""
+                                 },
+    "marketing-agentic-search-optimizer.md":  {
+                                                  "name":  "0891B2\"",
+                                                  "mission":  ""
+                                              },
+    "nexus-strategy.md":  {
+                              "name":  "馃寪 NEXUS 鈥?Network of EXperts, Unified in Strategy",
+                              "mission":  ""
+                          },
+    "testing-reality-checker.md":  {
+                                       "name":  "Integration Agent Personality",
+                                       "mission":  ""
+                                   },
+    "engineering-sre.md":  {
+                               "name":  "e63946\"",
+                               "mission":  ""
+                           },
+    "game-designer.md":  {
+                             "name":  "Game Designer Agent Personality",
+                             "mission":  ""
+                         },
+    "product-trend-researcher.md":  {
+                                        "name":  "Product Trend Researcher Agent",
+                                        "mission":  ""
+                                    },
+    "specialized-document-generator.md":  {
+                                              "name":  "Document Generator Agent",
+                                              "mission":  ""
+                                          },
+    "marketing-livestream-commerce-coach.md":  {
+                                                   "name":  "E63946\"",
+                                                   "mission":  ""
+                                               },
+    "engineering-technical-writer.md":  {
+                                            "name":  "Technical Writer Agent",
+                                            "mission":  ""
+                                        },
+    "narrative-designer.md":  {
+                                  "name":  "Narrative Designer Agent Personality",
+                                  "mission":  ""
+                              },
+    "engineering-embedded-firmware-engineer.md":  {
+                                                      "name":  "Embedded Firmware Engineer",
+                                                      "mission":  ""
+                                                  },
+    "specialized-civil-engineer.md":  {
+                                          "name":  "Civil Engineer Agent",
+                                          "mission":  ""
+                                      },
+    "engineering-minimal-change-engineer.md":  {
+                                                   "name":  "Minimal Change Engineer Agent",
+                                                   "mission":  ""
+                                               },
+    "project-management-studio-producer.md":  {
+                                                  "name":  "Studio Producer Agent Personality",
+                                                  "mission":  ""
+                                              },
+    "project-management-studio-operations.md":  {
+                                                    "name":  "Studio Operations Agent Personality",
+                                                    "mission":  ""
+                                                },
+    "sales-coach.md":  {
+                           "name":  "E65100\"",
+                           "mission":  ""
+                       },
+    "paid-media-paid-social-strategist.md":  {
+                                                 "name":  "Paid Media Paid Social Strategist Agent",
+                                                 "mission":  ""
+                                             },
+    "design-whimsy-injector.md":  {
+                                      "name":  "Whimsy Injector Agent Personality",
+                                      "mission":  ""
+                                  },
+    "testing-accessibility-auditor.md":  {
+                                             "name":  "0077B6\"",
+                                             "mission":  ""
+                                         },
+    "design-visual-storyteller.md":  {
+                                         "name":  "Visual Storyteller Agent",
+                                         "mission":  ""
+                                     },
+    "design-ui-designer.md":  {
+                                  "name":  "UI Designer Agent Personality",
+                                  "mission":  ""
+                              },
+    "specialized-salesforce-architect.md":  {
+                                                "name":  "00A1E0\"",
+                                                "mission":  ""
+                                            },
+    "marketing-weibo-strategist.md":  {
+                                          "name":  "FF8200\"",
+                                          "mission":  ""
+                                      },
+    "engineering-voice-ai-integration-engineer.md":  {
+                                                         "name":  "馃帣锔?Voice AI Integration Engineer Agent",
+                                                         "mission":  ""
+                                                     },
+    "retail-customer-returns.md":  {
+                                       "name":  "馃洅 Retail Customer Returns Agent",
+                                       "mission":  ""
+                                   },
+    "engineering-feishu-integration-developer.md":  {
+                                                        "name":  "Feishu Integration Developer",
+                                                        "mission":  ""
+                                                    },
+    "marketing-book-co-author.md":  {
+                                        "name":  "8B5E3C\"",
+                                        "mission":  ""
+                                    },
+    "paid-media-ppc-strategist.md":  {
+                                         "name":  "Paid Media PPC Campaign Strategist Agent",
+                                         "mission":  ""
+                                     },
+    "engineering-email-intelligence-engineer.md":  {
+                                                       "name":  "Email Intelligence Engineer Agent",
+                                                       "mission":  ""
+                                                   },
+    "marketing-video-optimization-specialist.md":  {
+                                                       "name":  "Marketing Video Optimization Specialist Agent",
+                                                       "mission":  ""
+                                                   },
+    "paid-media-programmatic-buyer.md":  {
+                                             "name":  "Paid Media Programmatic \u0026 Display Buyer Agent",
+                                             "mission":  ""
+                                         },
+    "engineering-backend-architect.md":  {
+                                             "name":  "Backend Architect Agent Personality",
+                                             "mission":  ""
+                                         },
+    "government-digital-presales-consultant.md":  {
+                                                      "name":  "8B0000\"",
+                                                      "mission":  ""
+                                                  },
+    "academic-geographer.md":  {
+                                   "name":  "059669\"",
+                                   "mission":  ""
+                               },
+    "engineering-mobile-app-builder.md":  {
+                                              "name":  "Mobile App Builder Agent Personality",
+                                              "mission":  ""
+                                          },
+    "sales-deal-strategist.md":  {
+                                     "name":  "1B4D3E\"",
+                                     "mission":  ""
+                                 },
+    "design-inclusive-visuals-specialist.md":  {
+                                                   "name":  "4DB6AC\"",
+                                                   "mission":  ""
+                                               },
+    "healthcare-customer-service.md":  {
+                                           "name":  "馃彞 Healthcare Customer Service Agent",
+                                           "mission":  ""
+                                       },
+    "testing-test-results-analyzer.md":  {
+                                             "name":  "Test Results Analyzer Agent Personality",
+                                             "mission":  ""
+                                         },
+    "engineering-security-engineer.md":  {
+                                             "name":  "Security Engineer Agent",
+                                             "mission":  ""
+                                         },
+    "project-management-jira-workflow-steward.md":  {
+                                                        "name":  "Jira Workflow Steward Agent",
+                                                        "mission":  ""
+                                                    },
+    "paid-media-creative-strategist.md":  {
+                                              "name":  "Paid Media Ad Creative Strategist Agent",
+                                              "mission":  ""
+                                          },
+    "xr-interface-architect.md":  {
+                                      "name":  "XR Interface Architect Agent Personality",
+                                      "mission":  ""
+                                  },
+    "marketing-social-media-strategist.md":  {
+                                                 "name":  "Social Media Strategist Agent",
+                                                 "mission":  ""
+                                             },
+    "engineering-frontend-developer.md":  {
+                                              "name":  "Frontend Developer Agent Personality",
+                                              "mission":  ""
+                                          },
+    "language-translator.md":  {
+                                   "name":  "馃寪 Language Translator",
+                                   "mission":  ""
+                               },
+    "support-legal-compliance-checker.md":  {
+                                                "name":  "Legal Compliance Checker Agent Personality",
+                                                "mission":  ""
+                                            },
+    "engineering-senior-developer.md":  {
+                                            "name":  "Developer Agent Personality",
+                                            "mission":  ""
+                                        },
+    "marketing-content-creator.md":  {
+                                         "name":  "Marketing Content Creator Agent",
+                                         "mission":  ""
+                                     },
+    "study-abroad-advisor.md":  {
+                                    "name":  "1B4D3E\"",
+                                    "mission":  ""
+                                },
+    "marketing-instagram-curator.md":  {
+                                           "name":  "E4405F\"",
+                                           "mission":  ""
+                                       },
+    "marketing-wechat-official-account.md":  {
+                                                 "name":  "09B83E\"",
+                                                 "mission":  ""
+                                             },
+    "sales-engineer.md":  {
+                              "name":  "2E5090\"",
+                              "mission":  ""
+                          },
+    "sales-pipeline-analyst.md":  {
+                                      "name":  "059669\"",
+                                      "mission":  ""
+                                  },
+    "game-audio-engineer.md":  {
+                                   "name":  "Game Audio Engineer Agent Personality",
+                                   "mission":  ""
+                               },
+    "compliance-auditor.md":  {
+                                  "name":  "Compliance Auditor Agent",
+                                  "mission":  ""
+                              },
+    "testing-workflow-optimizer.md":  {
+                                          "name":  "Workflow Optimizer Agent Personality",
+                                          "mission":  ""
+                                      },
+    "marketing-xiaohongshu-specialist.md":  {
+                                                "name":  "FF1B6D\"",
+                                                "mission":  ""
+                                            },
+    "terminal-integration-specialist.md":  {
+                                               "name":  "Terminal Integration Specialist",
+                                               "mission":  ""
+                                           },
+    "visionos-spatial-engineer.md":  {
+                                         "name":  "visionOS Spatial Engineer",
+                                         "mission":  ""
+                                     },
+    "testing-performance-benchmarker.md":  {
+                                               "name":  "Performance Benchmarker Agent Personality",
+                                               "mission":  ""
+                                           },
+    "engineering-wechat-mini-program-developer.md":  {
+                                                         "name":  "WeChat Mini Program Developer Agent Personality",
+                                                         "mission":  ""
+                                                     },
+    "xr-cockpit-interaction-specialist.md":  {
+                                                 "name":  "XR Cockpit Interaction Specialist Agent Personality",
+                                                 "mission":  ""
+                                             },
+    "hospitality-guest-services.md":  {
+                                          "name":  "馃彣 Hospitality Guest Services Agent",
+                                          "mission":  ""
+                                      },
+    "engineering-autonomous-optimization-architect.md":  {
+                                                             "name":  "673AB7\"",
+                                                             "mission":  ""
+                                                         },
+    "project-management-experiment-tracker.md":  {
+                                                     "name":  "Experiment Tracker Agent Personality",
+                                                     "mission":  ""
+                                                 },
+    "marketing-growth-hacker.md":  {
+                                       "name":  "Marketing Growth Hacker Agent",
+                                       "mission":  ""
+                                   },
+    "data-consolidation-agent.md":  {
+                                        "name":  "38a169\"",
+                                        "mission":  ""
+                                    },
+    "engineering-ai-data-remediation-engineer.md":  {
+                                                        "name":  "AI Data Remediation Engineer Agent",
+                                                        "mission":  ""
+                                                    },
+    "legal-document-review.md":  {
+                                     "name":  "鈿栵笍 Legal Document Review Agent",
+                                     "mission":  ""
+                                 },
+    "engineering-git-workflow-master.md":  {
+                                               "name":  "Git Workflow Master Agent",
+                                               "mission":  ""
+                                           },
+    "support-finance-tracker.md":  {
+                                       "name":  "Finance Tracker Agent Personality",
+                                       "mission":  ""
+                                   },
+    "product-behavioral-nudge-engine.md":  {
+                                               "name":  "FF8A65\"",
+                                               "mission":  ""
+                                           },
+    "real-estate-buyer-seller.md":  {
+                                        "name":  "馃彔 Real Estate Buyer \u0026 Seller Agent",
+                                        "mission":  ""
+                                    },
+    "product-feedback-synthesizer.md":  {
+                                            "name":  "Product Feedback Synthesizer Agent",
+                                            "mission":  ""
+                                        },
+    "hr-onboarding.md":  {
+                             "name":  "馃 HR Onboarding Agent",
+                             "mission":  ""
+                         },
+    "legal-client-intake.md":  {
+                                   "name":  "馃搵 Legal Client Intake Agent",
+                                   "mission":  ""
+                               },
+    "project-management-project-shepherd.md":  {
+                                                   "name":  "Project Shepherd Agent Personality",
+                                                   "mission":  ""
+                                               },
+    "design-image-prompt-engineer.md":  {
+                                            "name":  "Image Prompt Engineer Agent",
+                                            "mission":  ""
+                                        },
+    "support-support-responder.md":  {
+                                         "name":  "Support Responder Agent Personality",
+                                         "mission":  ""
+                                     },
+    "marketing-private-domain-operator.md":  {
+                                                 "name":  "1A73E8\"",
+                                                 "mission":  ""
+                                             },
+    "identity-graph-operator.md":  {
+                                       "name":  "C5A572\"",
+                                       "mission":  ""
+                                   },
+    "specialized-french-consulting-market.md":  {
+                                                    "name":  "002395\"",
+                                                    "mission":  ""
+                                                },
+    "engineering-codebase-onboarding-engineer.md":  {
+                                                        "name":  "Codebase Onboarding Engineer Agent",
+                                                        "mission":  ""
+                                                    },
+    "product-sprint-prioritizer.md":  {
+                                          "name":  "Product Sprint Prioritizer Agent",
+                                          "mission":  ""
+                                      },
+    "engineering-code-reviewer.md":  {
+                                         "name":  "Code Reviewer Agent",
+                                         "mission":  ""
+                                     },
+    "finance-tax-strategist.md":  {
+                                      "name":  "馃彌锔?Tax Strategist Agent",
+                                      "mission":  ""
+                                  },
+    "finance-financial-analyst.md":  {
+                                         "name":  "馃搳 Financial Analyst Agent",
+                                         "mission":  ""
+                                     },
+    "sales-proposal-strategist.md":  {
+                                         "name":  "2563EB\"",
+                                         "mission":  ""
+                                     },
+    "engineering-devops-automator.md":  {
+                                            "name":  "DevOps Automator Agent Personality",
+                                            "mission":  ""
+                                        },
+    "marketing-tiktok-strategist.md":  {
+                                           "name":  "000000\"",
+                                           "mission":  ""
+                                       },
+    "marketing-carousel-growth-engine.md":  {
+                                                "name":  "FF0050\"",
+                                                "mission":  ""
+                                            },
+    "marketing-cross-border-ecommerce.md":  {
+                                                "name":  "Marketing Cross-Border E-Commerce Specialist",
+                                                "mission":  ""
+                                            },
+    "specialized-workflow-architect.md":  {
+                                              "name":  "Workflow Architect Agent Personality",
+                                              "mission":  ""
+                                          },
+    "engineering-filament-optimization-specialist.md":  {
+                                                            "name":  "Agent Personality",
+                                                            "mission":  ""
+                                                        },
+    "academic-historian.md":  {
+                                  "name":  "B45309\"",
+                                  "mission":  ""
+                              },
+    "design-ux-researcher.md":  {
+                                    "name":  "UX Researcher Agent Personality",
+                                    "mission":  ""
+                                },
+    "specialized-mcp-builder.md":  {
+                                       "name":  "MCP Builder Agent",
+                                       "mission":  ""
+                                   },
+    "specialized-developer-advocate.md":  {
+                                              "name":  "Developer Advocate Agent",
+                                              "mission":  ""
+                                          },
+    "engineering-incident-response-commander.md":  {
+                                                       "name":  "e63946\"",
+                                                       "mission":  ""
+                                                   },
+    "legal-billing-time-tracking.md":  {
+                                           "name":  "鈴憋笍 Legal Billing \u0026 Time Tracking Agent",
+                                           "mission":  ""
+                                       },
+    "engineering-cms-developer.md":  {
+                                         "name":  "馃П CMS Developer",
+                                         "mission":  ""
+                                     },
+    "marketing-bilibili-content-strategist.md":  {
+                                                     "name":  "Marketing Bilibili Content Strategist",
+                                                     "mission":  ""
+                                                 },
+    "marketing-seo-specialist.md":  {
+                                        "name":  "4285F4\"",
+                                        "mission":  ""
+                                    },
+    "paid-media-search-query-analyst.md":  {
+                                               "name":  "Paid Media Search Query Analyst Agent",
+                                               "mission":  ""
+                                           },
+    "healthcare-marketing-compliance.md":  {
+                                               "name":  "2E8B57\"",
+                                               "mission":  ""
+                                           },
+    "sales-outreach.md":  {
+                              "name":  "馃幆 Sales Outreach Agent",
+                              "mission":  ""
+                          },
+    "engineering-database-optimizer.md":  {
+                                              "name":  "馃梽锔?Database Optimizer",
+                                              "mission":  ""
+                                          },
+    "technical-artist.md":  {
+                                "name":  "Technical Artist Agent Personality",
+                                "mission":  ""
+                            },
+    "marketing-reddit-community-builder.md":  {
+                                                  "name":  "FF4500\"",
+                                                  "mission":  ""
+                                              },
+    "loan-officer-assistant.md":  {
+                                      "name":  "馃彟 Loan Officer Assistant Agent",
+                                      "mission":  ""
+                                  },
+    "academic-anthropologist.md":  {
+                                       "name":  "D97706\"",
+                                       "mission":  ""
+                                   },
+    "specialized-cultural-intelligence-strategist.md":  {
+                                                            "name":  "FFA000\"",
+                                                            "mission":  ""
+                                                        },
+    "marketing-zhihu-strategist.md":  {
+                                          "name":  "0084FF\"",
+                                          "mission":  ""
+                                      },
+    "marketing-app-store-optimizer.md":  {
+                                             "name":  "App Store Optimizer Agent Personality",
+                                             "mission":  ""
+                                         },
+    "marketing-linkedin-content-creator.md":  {
+                                                  "name":  "0A66C2\"",
+                                                  "mission":  ""
+                                              },
+    "testing-evidence-collector.md":  {
+                                          "name":  "QA Agent Personality",
+                                          "mission":  ""
+                                      },
+    "project-manager-senior.md":  {
+                                      "name":  "Project Manager Agent Personality",
+                                      "mission":  ""
+                                  }
+}
