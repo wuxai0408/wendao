@@ -54,5 +54,6 @@
   "终端": { "k":["终端","terminal","shell","zsh","命令行"], "a":["terminal-steward"] },
   "测试QA": { "k":["测试","qa","质量","自动化测试","性能测试","bug"], "a":["testing-qa-automation-engineer","testing-performance-engineer","testing-manual-qa-lead","testing-penetration-tester","testing-tool-evaluator"] },
   "数据工程": { "k":["数据","etl","pipeline","data","大数据","hadoop"], "a":["engineering-data-engineer","data-steward"] },
-  "贷款": { "k":["贷款","loan","借贷","信用","抵押"], "a":["loan-steward"] }
+  "贷款": { "k":["贷款","loan","借贷","信用","抵押"], "a":["loan-steward"] },
+  "小说写作": { "k":["小说","续写","写作","写书","故事","悬疑","奇幻","言情","科幻","叙事"], "a":["creative-novelist","narrative-designer"] }
 }
