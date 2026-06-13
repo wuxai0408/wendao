@@ -1,0 +1,11 @@
+{
+  "lastUpdated": null,
+  "window": { "lastNSessions": 10, "count": 0 },
+  "aggregates": {
+    "avgDurationSeconds": 0,
+    "avgFilesChanged": 0,
+    "totalUncommitted": 0,
+    "sessionsWithChanges": 0
+  },
+  "flags": []
+}

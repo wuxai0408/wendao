@@ -1,0 +1,94 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/Users/liyou/Downloads/无敌了/青云",
+        "C:/Users/liyou/Downloads"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    }
+  },
+  "hooks": {
+    "Start": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\无敌了\\青云\\.claude\\evolution\\hooks\\on-start.ps1\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\无敌了\\青云\\.claude\\evolution\\hooks\\on-stop.ps1\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(git:*)",
+      "Bash(npm run *)",
+      "Bash(node *)",
+      "Bash(*tsc*)",
+      "Bash(*pip*)",
+      "Bash(*cargo*)",
+      "Bash(*python *)",
+      "Bash(*pip3 *)",
+      "Bash(*winget *)",
+      "Bash(*choco *)",
+      "Bash(*Get-ChildItem*)",
+      "Bash(*Get-Content*)",
+      "Bash(*New-Item*)",
+      "Bash(*Remove-Item*)",
+      "Bash(*Copy-Item*)",
+      "Bash(*Move-Item*)",
+      "Bash(*Test-Path*)",
+      "Bash(*Write-Output*)",
+      "Bash(*Set-Content*)",
+      "Bash(*Out-File*)",
+      "Bash(*Select-Object*)",
+      "Bash(*Where-Object*)",
+      "Bash(*ForEach-Object*)"
+    ],
+    "deny": [
+      "Bash(*rm -rf *)",
+      "Bash(*sudo*)",
+      "Bash(*del /s *)",
+      "Bash(*rd /s *)",
+      "Bash(*format *)"
+    ]
+  }
+}

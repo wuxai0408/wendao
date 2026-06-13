@@ -1,0 +1,10 @@
+{
+  "toolFailurePattern": { "minOccurrences": 2, "minSessions": 2, "minConfidence": 0.7 },
+  "userCorrectionPattern": { "minOccurrences": 2, "minConfidence": 0.6 },
+  "agentMismatch": { "minOccurrences": 3, "minConfidence": 0.7 },
+  "experienceConsolidation": { "minRecordsOnTopic": 3 },
+  "staleHook": { "minSessionsNoSignal": 10 },
+  "newPermission": { "minDeniesInSession": 3 },
+  "cooldownSessions": 1,
+  "maxPendingProposals": 3
+}
