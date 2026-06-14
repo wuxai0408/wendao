@@ -1,26 +1,19 @@
-{
+﻿{
   "mcpServers": {
     "filesystem": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "C:/Users/liyou/Downloads/无敌了/青云",
+        "C:/Users/liyou/Downloads/wx/wendao",
         "C:/Users/liyou/Downloads"
       ]
     },
-    "sequential-thinking": {
+    "duckduckgo": {
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
-    },
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
+        "duckduckgo-websearch"
       ]
     },
     "puppeteer": {
@@ -29,16 +22,35 @@
         "-y",
         "@modelcontextprotocol/server-puppeteer"
       ]
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
+      }
     }
   },
   "hooks": {
-    "Start": [
+    "SessionStart": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\无敌了\\青云\\.claude\\evolution\\hooks\\on-start.ps1\""
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-start.ps1\""
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-drift-check.ps1\""
           }
         ]
       }
@@ -49,7 +61,29 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\无敌了\\青云\\.claude\\evolution\\hooks\\on-stop.ps1\""
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-stop.ps1\""
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-tool-failure.ps1\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-correction.ps1\""
           }
         ]
       }

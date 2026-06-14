@@ -1,11 +1,16 @@
-{
-  "lastUpdated": null,
-  "window": { "lastNSessions": 10, "count": 0 },
-  "aggregates": {
-    "avgDurationSeconds": 0,
-    "avgFilesChanged": 0,
-    "totalUncommitted": 0,
-    "sessionsWithChanges": 0
-  },
-  "flags": []
+﻿{
+    "flags":  [
+
+              ],
+    "aggregates":  {
+                       "avgFilesChanged":  0,
+                       "sessionsWithChanges":  0,
+                       "totalUncommitted":  0,
+                       "avgDurationSeconds":  0
+                   },
+    "lastUpdated":  null,
+    "window":  {
+                   "count":  0,
+                   "lastNSessions":  10
+               }
 }

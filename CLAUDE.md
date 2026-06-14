@@ -1,8 +1,8 @@
-# 青云项目
+# 问道项目 (wendao)
 
 ## 工作目录
-- 始终在 `C:\Users\liyou\Downloads\无敌了\青云` 下操作
-- 仓库地址: https://github.com/wuxai0408/wendao (wendao/问道)
+- 始终在 `C:\Users\liyou\Downloads\wx\wendao` 下操作
+- 仓库地址: https://github.com/wuxai0408/wendao
 
 ## 项目内容
 - 爱心代码.html — 爱心动画网页
@@ -51,7 +51,7 @@
 收到明显专业任务时，自动匹配领域专家（无需用户说"激活"）。
 
 **流程**：
-1. 读 `C:\Users\liyou\Downloads\无敌了\青云\agent-map.json`（54个分类的关键词映射表，~2KB）
+1. 读 `C:\Users\liyou\Downloads\wx\wendao\agent-map.json`（55个分类的关键词映射表，~5KB）
 2. 用用户任务关键词匹配映射表的 `k` 字段
 3. 命中后读 `~/.claude/agents/` 下匹配到的 `.md` 文件
 4. 静默加载专家人格，直接以该专家身份回复
