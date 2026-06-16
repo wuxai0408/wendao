@@ -53,7 +53,7 @@
 **流程**：
 1. 读 `C:\Users\liyou\Downloads\wx\wendao\agent-map.json`（55个分类的关键词映射表，~5KB）
 2. 用用户任务关键词匹配映射表的 `k` 字段
-3. 命中后读 `~/.claude/agents/` 下匹配到的 `.md` 文件
+3. 命中后读 `~/.claude/agents/<agent名>.md`（agent-map 无前缀，文件需加前缀）
 4. 静默加载专家人格，直接以该专家身份回复
 5. 未命中/闲聊/简单问答时跳过（不强制）
 
