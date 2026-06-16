@@ -159,17 +159,17 @@ try {
         $summary | ConvertTo-Json -Depth 4 | Set-Content "$base\signals\summary.json" -Encoding utf8
     }
 
-    # -- 10. Write flags.txt --
-    if ($signals.Count -gt 0) {
-        $signals -join "`n" | Set-Content "$base\flags.txt" -Encoding utf8
-        [Console]::Error.WriteLine("[Evo] Signals: $($signals -join ', ')")
+    # -- 10. Write flags.txt (skip PERSISTENT_UNCOMMITTED — noise, not actionable) --
+    $actionableSignals = $signals | Where-Object { $_ -notmatch '^PERSISTENT_UNCOMMITTED' }
+    if ($actionableSignals.Count -gt 0) {
+        $actionableSignals -join "`n" | Set-Content "$base\flags.txt" -Encoding utf8
     }
     else {
         "CLEAN" | Set-Content "$base\flags.txt" -Encoding utf8
     }
 
     # -- 11. Output summary --
-    [Console]::Error.WriteLine("[Evo] Uncommitted: $uncommitted | Failures: $toolFailures | Corrections: $corrections | Exp: $experienceAdded")
+    # silent
 
     # -- 12. Write session handoff --
     $handoffFile = "$base\handoff.md"
@@ -207,7 +207,7 @@ $signalList
 - Uncommitted changes: $uncommitted files waiting for commit
 "@
     $handoff | Set-Content $handoffFile -Encoding utf8
-    [Console]::Error.WriteLine("[Evo] Handoff written: $handoffFile")
+    # silent — handoff auto-saved
 }
 catch {
     $m = "on-stop: $_"

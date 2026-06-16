@@ -17,8 +17,7 @@ try {
             $flags += $flag
             $flags -join "`n" | Set-Content "$base\flags.txt" -Encoding utf8
         }
-        [Console]::Error.WriteLine("[Evo] DRIFT: CLAUDE.md missing!")
-        return
+        Add-Content "$base\errors.log" -Value "$(Get-Date -uformat '%Y-%m-%d %H:%M:%S'): CLAUDE.md missing"
     }
 
     $content = Get-Content $claudeMd -Raw -Encoding utf8
@@ -57,10 +56,7 @@ try {
         }
         $flags -join "`n" | Set-Content "$base\flags.txt" -Encoding utf8
 
-        [Console]::Error.WriteLine("[Evo] DRIFT: $($drifts.Count) broken references in CLAUDE.md")
-        foreach ($d in $drifts) {
-            [Console]::Error.WriteLine("[Evo]   -> $d")
-        }
+        Add-Content "$base\errors.log" -Value "$(Get-Date -uformat '%Y-%m-%d %H:%M:%S'): $($drifts.Count) broken refs: $($drifts -join ', ')"
     }
 }
 catch {

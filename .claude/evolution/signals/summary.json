@@ -1,16 +1,16 @@
 ﻿{
-    "flags":  [
-
-              ],
+    "lastUpdated":  "2026-06-16T22:34:17+08:00",
+    "window":  {
+                   "count":  6,
+                   "lastNSessions":  10
+               },
     "aggregates":  {
                        "avgFilesChanged":  0,
                        "sessionsWithChanges":  0,
                        "totalUncommitted":  0,
-                       "avgDurationSeconds":  0
+                       "avgDurationSeconds":  464
                    },
-    "lastUpdated":  null,
-    "window":  {
-                   "count":  0,
-                   "lastNSessions":  10
-               }
+    "flags":  [
+
+              ]
 }

@@ -24,7 +24,7 @@
    - ❌ 失败：场景、根因、教训（一句话）
    - ✅ 成功：做法、为什么有效、可复用的模式
 3. **追加到经验库** — 添加新条目，永远追加不覆盖不删除。编号递增
-4. **更新记忆文件** — 同步到 `C:\Users\liyou\.claude\projects\C--Users-liyou-Downloads-------\memory\feedback-experience-library.md`
+4. **更新记忆文件** — 同步到 `C:\Users\liyou\.claude\projects\C--Users-liyou-Downloads-wx-wendao\memory\feedback-experience-library.md`
 5. **更新 MEMORY.md 索引** — 如有新文件
 6. **Git 提交推送** — commit message 写清楚加了什么
 

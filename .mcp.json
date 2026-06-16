@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "C:/Users/liyou/Downloads/wx/wendao", "C:/Users/liyou/Downloads"]
+    },
+    "duckduckgo": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "duckduckgo-websearch"]
+    },
+    "puppeteer": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "github": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github"]
+    }
+  }
+}

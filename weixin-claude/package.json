@@ -9,8 +9,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.55.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "jimp": "^1.6.1",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
+    "socks": "^2.8.9",
     "tesseract.js": "^7.0.0"
   }
 }

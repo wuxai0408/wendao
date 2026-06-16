@@ -1,0 +1,22 @@
+﻿{
+    "sessionId":  "2026-06-16-007",
+    "startTime":  "2026-06-16T20:42:49+08:00",
+    "endTime":  "2026-06-16T20:48:39+08:00",
+    "durationSeconds":  350,
+    "status":  "completed",
+    "filesChanged":  [
+
+                     ],
+    "uncommittedChanges":  null,
+    "flag":  "clean",
+    "agentUsed":  [
+
+                  ],
+    "toolFailures":  0,
+    "corrections":  0,
+    "signals":  [
+                    "PERSISTENT_UNCOMMITTED(3)"
+                ],
+    "experienceCount":  0,
+    "notes":  ""
+}

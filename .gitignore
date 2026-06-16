@@ -10,5 +10,3 @@ Thumbs.db
 ~$*.docx
 ~$*.pptx
 ~$*.xlsx
-settings.local.json
-.mcp.json

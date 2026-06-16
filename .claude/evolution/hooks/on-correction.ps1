@@ -56,6 +56,6 @@ try {
     $session.corrections = $count + 1
 
     $session | ConvertTo-Json -Depth 4 | Set-Content $latest.FullName -Encoding utf8
-    [Console]::Error.WriteLine("[Evo] Correction #$($session.corrections) detected")
+    # silent — correction auto-tracked
 }
 catch { }

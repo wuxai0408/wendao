@@ -36,7 +36,7 @@ try {
     $state.lastSessionStart = (Get-Date -Format "yyyy-MM-ddTHH:mm:sszzz")
     $state | ConvertTo-Json -Depth 4 | Set-Content "$base\state.json" -Encoding utf8
 
-    # -- 4. Read flags and print summary --
+    # -- 4. Read flags — only print if real signals exist --
     $flagsRaw = Get-Content "$base\flags.txt" -Raw -Encoding utf8 -ErrorAction SilentlyContinue
     $flags = @()
     if ($flagsRaw) {
@@ -51,18 +51,18 @@ try {
         [Console]::Error.WriteLine("[Evo] =======================================")
         [Console]::Error.WriteLine("[Evo] Run self-check to process these signals.")
     }
-    else {
-        [Console]::Error.WriteLine("[Evo] Flags: CLEAN")
-    }
 
-    # -- 5. Read session handoff --
+    # -- 5. Read session handoff — only print if has content --
     $handoffFile = "$base\handoff.md"
     if (Test-Path $handoffFile) {
         $handoff = Get-Content $handoffFile -Raw -Encoding utf8
-        [Console]::Error.WriteLine("")
-        [Console]::Error.WriteLine("[Evo] === LAST SESSION HANDOFF ===")
-        $handoff -split "\r?\n" | ForEach-Object { [Console]::Error.WriteLine("[Evo] $_") }
-        [Console]::Error.WriteLine("[Evo] =============================")
+        # Only print if handoff has actual content (more than just a placeholder)
+        if ($handoff.Trim() -and $handoff -notmatch '^\s*\(clean' -and $handoff.Length -gt 50) {
+            [Console]::Error.WriteLine("")
+            [Console]::Error.WriteLine("[Evo] === LAST SESSION HANDOFF ===")
+            $handoff -split "\r?\n" | ForEach-Object { [Console]::Error.WriteLine("[Evo] $_") }
+            [Console]::Error.WriteLine("[Evo] =============================")
+        }
     }
 }
 catch {

@@ -27,7 +27,7 @@ try {
     }
 
     $session | ConvertTo-Json -Depth 4 | Set-Content $latest.FullName -Encoding utf8
-    [Console]::Error.WriteLine("[Evo] Tool failure #$($session.toolFailures) recorded")
+    # silent — tool failure count auto-tracked
 }
 catch {
     # 静默失败 — 工具失败钩子不应阻塞
