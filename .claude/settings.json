@@ -1,0 +1,131 @@
+﻿{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/Users/liyou/Downloads/wx/wendao",
+        "C:/Users/liyou/Downloads"
+      ]
+    },
+    "duckduckgo": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "duckduckgo-websearch"
+      ]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ]
+    }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-start.ps1\""
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-drift-check.ps1\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-stop.ps1\""
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-tool-failure.ps1\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \"C:\\Users\\liyou\\Downloads\\wx\\wendao\\.claude\\evolution\\hooks\\on-correction.ps1\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(git:*)",
+      "Bash(npm run *)",
+      "Bash(node *)",
+      "Bash(*tsc*)",
+      "Bash(*pip*)",
+      "Bash(*cargo*)",
+      "Bash(*python *)",
+      "Bash(*pip3 *)",
+      "Bash(*winget *)",
+      "Bash(*choco *)",
+      "Bash(*Get-ChildItem*)",
+      "Bash(*Get-Content*)",
+      "Bash(*New-Item*)",
+      "Bash(*Remove-Item*)",
+      "Bash(*Copy-Item*)",
+      "Bash(*Move-Item*)",
+      "Bash(*Test-Path*)",
+      "Bash(*Write-Output*)",
+      "Bash(*Set-Content*)",
+      "Bash(*Out-File*)",
+      "Bash(*Select-Object*)",
+      "Bash(*Where-Object*)",
+      "Bash(*ForEach-Object*)"
+    ],
+    "deny": [
+      "Bash(*rm -rf *)",
+      "Bash(*sudo*)",
+      "Bash(*del /s *)",
+      "Bash(*rd /s *)",
+      "Bash(*format *)",
+      "Bash(*Remove-Item * -Recurse* -Force*)",
+      "Bash(*Stop-Process*)",
+      "Bash(*Stop-Computer*)",
+      "Bash(*Restart-Computer*)",
+      "Bash(*Format-Volume*)",
+      "Bash(*Clear-RecycleBin*)"
+    ]
+  }
+}

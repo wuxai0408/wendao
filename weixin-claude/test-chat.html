@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>聊天记录测试</title>
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; background: #f0f2f5; }
+  h2 { color: #333; }
+  .msg { border-radius: 8px; padding: 10px 14px; margin: 8px 0; max-width: 80%; white-space: pre-wrap; }
+  .user { background: #e8f0fe; }
+  .assistant { background: #e6f4ea; border: 1px solid #c8e6c9; }
+  .role { font-size: 11px; font-weight: bold; margin-bottom: 4px; color: #666; }
+  .error { color: red; padding: 10px; background: #fce8e6; border-radius: 8px; }
+</style>
+</head>
+<body>
+<h2>聊天记录 — 测试页</h2>
+<div id="status">加载中...</div>
+<div id="chat"></div>
+
+<script>
+(async function() {
+  var statusDiv = document.getElementById("status");
+  var chatDiv = document.getElementById("chat");
+
+  try {
+    statusDiv.textContent = "正在请求 /api/stats...";
+    var statsResp = await fetch("http://localhost:8899/api/stats");
+    if (!statsResp.ok) throw new Error("stats " + statsResp.status);
+    var stats = await statsResp.json();
+    statusDiv.textContent = "stats OK, 用户数: " + stats.users.length;
+
+    if (stats.users.length === 0) {
+      chatDiv.innerHTML = "<p>暂无用户</p>";
+      return;
+    }
+
+    var userId = stats.users[0].userId;
+    statusDiv.textContent += " | 加载用户 " + userId + " 的对话...";
+
+    var chatResp = await fetch("http://localhost:8899/api/chat/" + encodeURIComponent(userId));
+    if (!chatResp.ok) throw new Error("chat " + chatResp.status);
+    var messages = await chatResp.json();
+
+    statusDiv.textContent = "加载成功！消息数: " + messages.length;
+
+    chatDiv.innerHTML = messages.map(function(m) {
+      return '<div class="msg ' + m.role + '"><div class="role">' + m.role + '</div>' + m.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+    }).join("");
+
+  } catch (err) {
+    statusDiv.innerHTML = '<div class="error">❌ 错误: ' + err.message + '<br>请确认控制台在 http://localhost:8899 运行中</div>';
+  }
+})();
+</script>
+</body>
+</html>

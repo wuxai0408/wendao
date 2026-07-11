@@ -1,0 +1,4 @@
+node_modules/
+.weixin-claude/
+.weixin-claude-qr.json
+.env

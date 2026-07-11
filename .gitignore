@@ -1,0 +1,12 @@
+node_modules/
+temp_docx/
+temp_docx.zip
+download/
+bg_images/
+*.log
+debug.log
+.DS_Store
+Thumbs.db
+~$*.docx
+~$*.pptx
+~$*.xlsx
